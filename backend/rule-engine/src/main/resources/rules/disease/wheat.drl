@@ -1,0 +1,58 @@
+package rules.disease;
+import com.agriscope.rule_engine.domain.model.DailyWeatherData;
+import com.agriscope.rule_engine.domain.model.Seed;
+import com.agriscope.rule_engine.domain.enums.SeedType;
+import com.agriscope.rule_engine.domain.model.Recommendation;
+import com.agriscope.rule_engine.domain.enums.RecommendationType;
+import com.agriscope.rule_engine.domain.model.FieldStatus
+import com.agriscope.rule_engine.domain.enums.GrowthStage
+
+global java.util.List recommendations;
+
+rule "Wheat - Disease Risk (Fusarium) Dynamic"
+    when
+        $seed : Seed(seedType == SeedType.WHEAT)
+        $field : FieldStatus(seedType == SeedType.WHEAT, stage != GrowthStage.READY)
+        $rainLimit : Number() from $seed.diseaseRainThreshold * $seed.getParam("disease_rain_factor", 1.0)
+        $minTemp   : Number() from $seed.diseaseRiskMinTemp + $seed.getParam("disease_temp_offset", 0.0)
+
+        $day : DailyWeatherData(
+            rain_sum > $rainLimit.doubleValue(),
+            temperature_2m_max >= $minTemp.doubleValue(),
+            temperature_2m_max <= $seed.diseaseRiskMaxTemp
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setRecommendedSeed(SeedType.WHEAT);
+        rec.setRecommendationType(RecommendationType.DISEASE_PREVENTION);
+
+        rec.setAdvice("7-Day Forecast Alert: Fusarium Risk on " + $day.getDate().toLocalDate());
+        rec.setReasoning("Forecast predicts rain (" + $day.getRain_sum() + "mm) > threshold (" +
+                         String.format("%.1f", $rainLimit) + "mm) and warm temps. High risk.");
+
+        rec.getMetrics().put("forecast_date", $day.getDate().toString());
+        rec.getMetrics().put("rain_predicted", $day.getRain_sum());
+        recommendations.add(rec);
+end
+
+rule "Wheat - Nutrient Loss Warning"
+    when
+        $seed : Seed(seedType == SeedType.WHEAT)
+        $field : FieldStatus(seedType == SeedType.WHEAT, stage != GrowthStage.READY)
+        $day : DailyWeatherData(
+            rain_sum > $seed.heavyRainThreshold
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setRecommendedSeed(SeedType.WHEAT);
+        rec.setRecommendationType(RecommendationType.NUTRIENT_CHECK);
+        rec.setAdvice("7-Day Forecast: Nutrient Leaching Risk on " + $day.getDate().toLocalDate());
+
+        rec.setReasoning("Heavy rain (" + $day.getRain_sum() + "mm) is predicted on " + $day.getDate().toLocalDate() +
+                         ". This may wash away Nitrogen. Consider checking soil status after this date.");
+
+        rec.getMetrics().put("forecast_date", $day.getDate().toString());
+        rec.getMetrics().put("rain_predicted", $day.getRain_sum());
+
+        recommendations.add(rec);
+end

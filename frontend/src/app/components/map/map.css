@@ -1,0 +1,15 @@
+#map {
+    height: 200px; 
+    width: 500px;
+    margin: 0 auto; 
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+
+.leaflet-control {
+  z-index: 800;
+}
+
+

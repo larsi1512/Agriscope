@@ -1,0 +1,271 @@
+/* ============================================
+   TOPBAR CONTAINER
+   ============================================ */
+
+.topbar-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+
+  height: 70px;
+  padding: 0 32px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background: rgba(82, 167, 34, 0.23);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+
+  z-index: 50;
+}
+
+/* ============================================
+   TOPBAR LEFT & RIGHT
+   ============================================ */
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-right: 60px;
+}
+
+/* ============================================
+   TOPBAR ICONS
+   ============================================ */
+
+.topbar-icon {
+  width: 60px;
+  height: 60px;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  object-fit: contain;
+}
+
+.logo-icon {
+  width: 95px;
+  height: 95px;
+  margin-top: 2px;
+  margin-left: -10px;
+}
+
+.topbar-icon:hover {
+  transform: scale(1.12);
+  opacity: 0.85;
+}
+
+/* ============================================
+   FARM TITLE SECTION
+   ============================================ */
+
+.farm-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.farm-name {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #5C2E0A;
+  text-shadow:
+    1px 1px 2px rgba(255, 255, 255, 0.8),
+    0 0 10px rgba(255, 248, 220, 0.5);
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+}
+
+.farm-subtitle {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #8B4513;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+/* ============================================
+   MENU DROPDOWN
+   ============================================ */
+
+.menu-wrapper {
+  position: relative;
+}
+
+.wooden-dropdown {
+  position: absolute;
+  top: 75px;
+  right: 0;
+
+  width: 220px;
+
+  background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #bc4705 100%);
+  border: 4px solid #5C2E0A;
+  border-radius: 12px;
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+
+  padding: 8px;
+
+  animation: dropdownSlide 0.3s ease-out;
+
+  z-index: 100;
+}
+
+.wooden-dropdown::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.1) 2px,
+      rgba(0, 0, 0, 0.1) 4px
+    );
+
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 14px 16px;
+  margin: 4px 0;
+
+  background: rgba(139, 69, 19, 0.3);
+  border: 2px solid #6B3410;
+  border-radius: 8px;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  position: relative;
+  z-index: 1;
+}
+
+.dropdown-item:hover {
+  background: rgba(160, 82, 45, 0.5);
+  border-color: #8B4513;
+  transform: translateX(-3px);
+  box-shadow:
+    3px 3px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 3px rgba(255, 255, 255, 0.2);
+}
+
+.dropdown-item:active {
+  transform: translateX(-1px);
+  box-shadow:
+    1px 1px 4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-icon {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.dropdown-item span {
+  font-size: 18px;
+  font-weight: 500;
+  color: #FFF8DC;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .topbar-container {
+    padding: 0 16px;
+  }
+
+  .topbar-left {
+    gap: 10px;
+  }
+
+  .topbar-right {
+    gap: 16px;
+    margin-right: 0;
+  }
+
+  .logo-icon {
+    width: 70px;
+    height: 70px;
+  }
+
+  .topbar-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .farm-name {
+    font-size: 18px;
+  }
+
+  .farm-subtitle {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .farm-name {
+    font-size: 16px;
+  }
+
+  .farm-subtitle {
+    font-size: 9px;
+  }
+
+  .wooden-dropdown {
+    width: 180px;
+  }
+
+  .dropdown-item span {
+    font-size: 16px;
+  }
+}

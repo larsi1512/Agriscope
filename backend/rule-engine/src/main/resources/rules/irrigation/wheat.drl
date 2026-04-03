@@ -1,0 +1,203 @@
+package rules.irrigation;
+
+import com.agriscope.rule_engine.domain.model.Seed;
+import com.agriscope.rule_engine.domain.model.FarmDetails;
+import com.agriscope.rule_engine.domain.model.Recommendation;
+import com.agriscope.rule_engine.domain.model.FieldStatus;
+import com.agriscope.rule_engine.domain.dto.DailyAnalysis;
+import com.agriscope.rule_engine.domain.enums.SeedType;
+import com.agriscope.rule_engine.domain.enums.SoilType;
+import com.agriscope.rule_engine.domain.enums.RecommendationType;
+import com.agriscope.rule_engine.domain.enums.GrowthStage;
+
+global java.util.List recommendations;
+
+
+rule "Wheat - Ready to Harvest - Force Dry"
+    salience 200
+    activation-group "wheat-irrigation"
+    when
+        $seed   : Seed(seedType == SeedType.WHEAT)
+        $status : FieldStatus(seedType == SeedType.WHEAT, stage == GrowthStage.READY, $fid : fieldId)
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.WHEAT);
+        rec.setRecommendationType(RecommendationType.READY_TO_HARVEST);
+        rec.setAdvice("STOP Irrigation - Wheat Harvest Approaching");
+        rec.setReasoning("Wheat is in 'Ready' stage. Irrigation now increases risk of sprouting in the ear and fungal diseases. Soil must be dry for harvest.");
+        recommendations.add(rec);
+end
+
+
+rule "Delay Irrigation - WHEAT"
+    salience 99
+    activation-group "wheat-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.WHEAT, $stage : stage, $fid : fieldId)
+        $farm   : FarmDetails($soil : soilType)
+        $seed   : Seed(seedType == SeedType.WHEAT)
+
+        $calc   : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit > $seed.allowedWaterDeficit * $seed.getParam("delay_deficit_factor", 0.9)
+        )
+
+        $analysis : DailyAnalysis(
+            currentSoilMoisture < $seed.minSoilMoisture,
+            totalRain > $seed.heavyRainThreshold
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.WHEAT);
+        rec.setRecommendationType(RecommendationType.DELAY_IRRIGATION);
+        rec.setAdvice("Delay Irrigation (" + $stage + ") - Rain Forecast");
+        rec.setReasoning("Rain forecast (" + String.format("%.1f", $analysis.getTotalRain()) +
+                         "mm) is expected. Wheat tolerates short dry periods well.");
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        recommendations.add(rec);
+end
+
+
+rule "Irrigation - WHEAT - Urgent"
+    salience 50
+    activation-group "wheat-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.WHEAT, $stage : stage, $fid : fieldId)
+        $farm   : FarmDetails($soil : soilType)
+        $seed   : Seed(seedType == SeedType.WHEAT)
+
+        $calc : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit > $seed.allowedWaterDeficit * $seed.getParam("urgent_deficit_factor", 1.0)
+        )
+
+        $analysis : DailyAnalysis(
+            currentSoilMoisture < $seed.minSoilMoisture * $seed.getParam("urgent_moisture_factor", 1.0)
+        )
+
+        not DailyAnalysis(totalRain > $seed.heavyRainThreshold)
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.WHEAT);
+        rec.setRecommendationType(RecommendationType.IRRIGATE_NOW);
+
+        String urgency = "URGENT";
+        String context = "";
+        if ($stage == GrowthStage.MATURE) {
+            urgency = "CRITICAL";
+            context = "Water stress now reduces kernel weight directly.";
+        } else if ($stage == GrowthStage.YOUNG) {
+            context = "Stem elongation: Needs consistent moisture for biomass.";
+        } else if ($stage == GrowthStage.SEEDLING) {
+            context = "Seedling stage: Ensure establishment but avoid waterlogging.";
+        } else {
+             context = "Soil moisture critically low.";
+        }
+
+        double threshold = $seed.getAllowedWaterDeficit() * $seed.getParam("urgent_deficit_factor", 1.0);
+
+        rec.setAdvice(urgency + ": Irrigate Wheat (" + $stage + ")");
+        rec.setReasoning(context + " Deficit: " + String.format("%.1f", $calc.getDeficit()) +
+                         " mm (Threshold: " + String.format("%.1f", threshold) + " mm).");
+
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        rec.getMetrics().put("crop_stage", $stage.toString());
+        recommendations.add(rec);
+end
+
+
+rule "Irrigation Soon Warning - WHEAT"
+    salience 40
+    activation-group "wheat-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.WHEAT, $stage : stage, $fid : fieldId)
+        $seed   : Seed(seedType == SeedType.WHEAT)
+
+        $calc : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit > $seed.allowedWaterDeficit * $seed.getParam("soon_deficit_min", 0.7),
+            deficit <= $seed.allowedWaterDeficit * $seed.getParam("soon_deficit_max", 1.0)
+        )
+
+        $analysis : DailyAnalysis(
+            currentSoilMoisture >= $seed.minSoilMoisture * $seed.getParam("soon_moisture_min", 0.8),
+            currentSoilMoisture < $seed.minSoilMoisture * $seed.getParam("soon_moisture_max", 1.0)
+        )
+
+        not DailyAnalysis(totalRain > $seed.heavyRainThreshold)
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.WHEAT);
+        rec.setRecommendationType(RecommendationType.IRRIGATE_SOON);
+
+        double minThr = $seed.getAllowedWaterDeficit() * $seed.getParam("soon_deficit_min", 0.7);
+        double maxThr = $seed.getAllowedWaterDeficit() * $seed.getParam("soon_deficit_max", 1.0);
+
+        rec.setAdvice("Plan Irrigation for Wheat (" + $stage + ")");
+        rec.setReasoning("Moisture levels dropping. Deficit: " + String.format("%.1f", $calc.getDeficit()) +
+                         " mm. Warning Range: " + String.format("%.1f", minThr) + " - " + String.format("%.1f", maxThr) + " mm.");
+
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        recommendations.add(rec);
+end
+
+
+rule "No Action Needed - WHEAT"
+    salience 10
+    activation-group "wheat-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.WHEAT, $stage : stage, $fid : fieldId)
+        $seed   : Seed(seedType == SeedType.WHEAT)
+
+        $calc : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit <= $seed.allowedWaterDeficit * $seed.getParam("normal_deficit_limit", 0.7)
+        )
+        $analysis : DailyAnalysis(
+            currentSoilMoisture >= $seed.minSoilMoisture
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.WHEAT);
+        rec.setRecommendationType(RecommendationType.CONTINUE_NORMAL);
+
+        double limit = $seed.getAllowedWaterDeficit() * $seed.getParam("normal_deficit_limit", 0.7);
+
+        rec.setAdvice("Wheat Conditions Normal (" + $stage + ")");
+        rec.setReasoning("Moisture adequate (" + String.format("%.1f%%", $analysis.getCurrentSoilMoisture() * 100) +
+                         "). Deficit: " + String.format("%.1f", $calc.getDeficit()) + " mm (Safe below: " + String.format("%.1f", limit) + " mm).");
+
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        recommendations.add(rec);
+end
+
+
+rule "Monitor Conditions - WHEAT (Fallback)"
+    salience 1
+    activation-group "wheat-irrigation"
+    when
+        $seed   : Seed(seedType == SeedType.WHEAT)
+        $status : FieldStatus(seedType == SeedType.WHEAT, $stage : stage, $fid : fieldId)
+        $calc   : WaterDeficitResult(seed == $seed, fieldId == $fid)
+        $analysis : DailyAnalysis()
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.WHEAT);
+        rec.setRecommendationType(RecommendationType.MONITOR_CONDITIONS);
+        rec.setAdvice("Monitor Wheat Conditions (" + $stage + ")");
+        rec.setReasoning("Conditions stable. Deficit: " + String.format("%.1f", $calc.getDeficit()) +
+                         " mm. Soil moisture: " + String.format("%.1f%%", $analysis.getCurrentSoilMoisture() * 100) + ".");
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        rec.getMetrics().put("rule_fired", "wheat-monitor-fallback");
+        recommendations.add(rec);
+end

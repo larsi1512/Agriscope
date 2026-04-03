@@ -1,0 +1,59 @@
+package rules.disease;
+import com.agriscope.rule_engine.domain.model.DailyWeatherData;
+import com.agriscope.rule_engine.domain.model.Seed;
+import com.agriscope.rule_engine.domain.enums.SeedType;
+import com.agriscope.rule_engine.domain.model.Recommendation
+import com.agriscope.rule_engine.domain.enums.RecommendationType;
+import com.agriscope.rule_engine.domain.model.FieldStatus
+import com.agriscope.rule_engine.domain.enums.GrowthStage
+
+global java.util.List recommendations;
+
+rule "Corn - Fungal Disease Risk Dynamic"
+    when
+        $seed : Seed(seedType == SeedType.CORN)
+        $field : FieldStatus(seedType == SeedType.CORN, stage != GrowthStage.READY)
+        $rainLimit : Number() from $seed.diseaseRainThreshold * $seed.getParam("disease_rain_factor", 1.0)
+        $tempLimit : Number() from $seed.diseaseRiskMinTemp + $seed.getParam("disease_temp_offset", 0.0)
+
+        $day : DailyWeatherData(
+            rain_sum > $rainLimit.doubleValue(),
+            temperature_2m_min > $tempLimit.doubleValue()
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setRecommendedSeed(SeedType.CORN);
+        rec.setRecommendationType(RecommendationType.DISEASE_PREVENTION);
+
+        rec.setAdvice("Monitor for Leaf Blight");
+        rec.setReasoning("Warm (> " + String.format("%.1f", $tempLimit) + "C) & wet (> " +
+                         String.format("%.1f", $rainLimit) + "mm) forecast favors fungal spread.");
+
+        rec.getMetrics().put("forecast_date", $day.getDate().toString());
+        rec.getMetrics().put("rain", $day.getRain_sum());
+        recommendations.add(rec);
+end
+
+rule "Corn - Wind Damage Risk Dynamic"
+    when
+        $seed : Seed(seedType == SeedType.CORN)
+        $field : FieldStatus(seedType == SeedType.CORN, stage != GrowthStage.READY)
+        $windLimit : Number() from $seed.maxWindTolerance * $seed.getParam("wind_safety_factor", 1.0)
+
+        $day : DailyWeatherData(
+            wind_speed_10m_max > $windLimit.doubleValue()
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setRecommendedSeed(SeedType.CORN);
+        rec.setRecommendationType(RecommendationType.PLANNING_ALERT);
+
+        rec.setAdvice("7-Day Forecast: High Wind Alert on " + $day.getDate().toLocalDate());
+        rec.setReasoning("Wind gusts > " + String.format("%.1f", $windLimit) +
+                         " km/h predicted. Risk of lodging (stalk breakage). Avoid spraying.");
+
+        rec.getMetrics().put("forecast_date", $day.getDate().toString());
+        rec.getMetrics().put("wind_speed_predicted", $day.getWind_speed_10m_max());
+
+        recommendations.add(rec);
+end

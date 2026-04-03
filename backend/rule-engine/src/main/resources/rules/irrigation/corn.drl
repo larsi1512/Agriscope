@@ -1,0 +1,207 @@
+package rules.irrigation;
+
+import com.agriscope.rule_engine.domain.model.Seed;
+import com.agriscope.rule_engine.domain.model.FarmDetails;
+import com.agriscope.rule_engine.domain.model.Recommendation;
+import com.agriscope.rule_engine.domain.model.FieldStatus;
+import com.agriscope.rule_engine.domain.dto.DailyAnalysis;
+import com.agriscope.rule_engine.domain.enums.SeedType;
+import com.agriscope.rule_engine.domain.enums.SoilType;
+import com.agriscope.rule_engine.domain.enums.RecommendationType;
+import com.agriscope.rule_engine.domain.enums.GrowthStage;
+
+global java.util.List recommendations;
+
+
+rule "Corn - Ready to Harvest - Force Dry"
+    salience 200
+    activation-group "corn-irrigation"
+    when
+        $seed   : Seed(seedType == SeedType.CORN)
+        $status : FieldStatus(seedType == SeedType.CORN, stage == GrowthStage.READY, $fid : fieldId)
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId( $fid);
+        rec.setRecommendedSeed(SeedType.CORN);
+        rec.setRecommendationType(RecommendationType.READY_TO_HARVEST);
+        rec.setAdvice("STOP Irrigation - Corn Harvest Approaching");
+        rec.setReasoning("Corn is in 'Ready' stage. Drying down is necessary for machinery access and grain quality. Ignore calculated moisture deficits.");
+        recommendations.add(rec);
+end
+
+
+rule "Delay Irrigation - CORN"
+    salience 99
+    activation-group "corn-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.CORN, $stage : stage, $fid : fieldId)
+        $farm   : FarmDetails($soil : soilType)
+        $seed   : Seed(seedType == SeedType.CORN)
+
+        $calc   : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit > $seed.allowedWaterDeficit * $seed.getParam("delay_deficit_factor", 0.8)
+        )
+
+        $analysis : DailyAnalysis(
+            currentSoilMoisture < $seed.minSoilMoisture,
+            totalRain > $seed.heavyRainThreshold
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId( $fid);
+        rec.setRecommendedSeed(SeedType.CORN);
+        rec.setRecommendationType(RecommendationType.DELAY_IRRIGATION);
+        rec.setAdvice("Delay Irrigation (" + $stage + ") - Rain Forecast");
+        double triggerThr = $seed.getAllowedWaterDeficit() * $seed.getParam("delay_deficit_factor", 0.8);
+        rec.setReasoning("Heavy rain (" + String.format("%.1f", $analysis.getTotalRain()) +
+                         "mm) expected. Irrigation withheld despite deficit " + String.format("%.1f", $calc.getDeficit()) +
+                         " mm (> " + String.format("%.1f", triggerThr) + " mm).");
+        recommendations.add(rec);
+end
+
+
+rule "Irrigation - CORN - Urgent"
+    salience 50
+    activation-group "corn-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.CORN, $stage : stage, $fid : fieldId)
+        $farm   : FarmDetails($soil : soilType)
+        $seed   : Seed(seedType == SeedType.CORN)
+
+        $calc : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit > $seed.allowedWaterDeficit * $seed.getParam("urgent_deficit_factor", 0.9)
+        )
+
+        $analysis : DailyAnalysis(
+            currentSoilMoisture < $seed.minSoilMoisture * $seed.getParam("urgent_moisture_factor", 1.1)
+        )
+
+        not DailyAnalysis(totalRain > $seed.heavyRainThreshold)
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.CORN);
+        rec.setRecommendationType(RecommendationType.IRRIGATE_NOW);
+
+        String urgency = "URGENT";
+        String context = "";
+        if ($stage == GrowthStage.MATURE) {
+            urgency = "CRITICAL";
+            context = "Flowering/Grain filling stage is critical. Water stress now causes direct yield loss.";
+        } else if ($stage == GrowthStage.SEEDLING) {
+            urgency = "CAUTION";
+            context = "Seedling roots are shallow. Ensure precise application to avoid root rot.";
+        } else {
+            context = "Vegetative growth requires consistent water for stalk development.";
+        }
+
+        double threshold = $seed.getAllowedWaterDeficit() * $seed.getParam("urgent_deficit_factor", 0.9);
+
+        rec.setAdvice(urgency + ": Irrigate Corn (" + $stage + ")");
+
+        rec.setReasoning(context + " Deficit: " + String.format("%.1f", $calc.getDeficit()) +
+                         " mm (Threshold: " + String.format("%.1f", threshold) + " mm)");
+
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        rec.getMetrics().put("crop_stage", $stage.toString());
+        recommendations.add(rec);
+end
+
+
+rule "Irrigation Soon Warning - CORN"
+    salience 40
+    activation-group "corn-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.CORN, $stage : stage, $fid : fieldId)
+        $seed   : Seed(seedType == SeedType.CORN)
+
+        $calc : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit > $seed.allowedWaterDeficit * $seed.getParam("soon_deficit_min", 0.6),
+            deficit <= $seed.allowedWaterDeficit * $seed.getParam("soon_deficit_max", 0.9)
+        )
+
+        $analysis : DailyAnalysis(
+            currentSoilMoisture >= $seed.minSoilMoisture * $seed.getParam("soon_moisture_min", 0.9),
+            currentSoilMoisture < $seed.minSoilMoisture * $seed.getParam("soon_moisture_max", 1.1)
+        )
+
+        not DailyAnalysis(totalRain > $seed.heavyRainThreshold)
+    then
+
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.CORN);
+        rec.setRecommendationType(RecommendationType.IRRIGATE_SOON);
+
+        double minThr = $seed.getAllowedWaterDeficit() * $seed.getParam("soon_deficit_min", 0.6);
+        double maxThr = $seed.getAllowedWaterDeficit() * $seed.getParam("soon_deficit_max", 0.9);
+
+        rec.setAdvice("Prepare Irrigation (" + $stage + ")");
+
+        rec.setReasoning("Deficit: " + String.format("%.1f", $calc.getDeficit()) + " mm is approaching limit. " +
+                         "Warning Range: " + String.format("%.1f", minThr) + " - " + String.format("%.1f", maxThr) + " mm.");
+
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        recommendations.add(rec);
+end
+
+rule "No Action Needed - CORN"
+    salience 10
+    activation-group "corn-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.CORN, $stage : stage, $fid : fieldId)
+        $seed   : Seed(seedType == SeedType.CORN)
+
+        $calc : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit <= $seed.allowedWaterDeficit * $seed.getParam("normal_deficit_limit", 0.6)
+        )
+        $analysis : DailyAnalysis(
+            currentSoilMoisture >= $seed.minSoilMoisture
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.CORN);
+        rec.setRecommendationType(RecommendationType.CONTINUE_NORMAL);
+
+        double limit = $seed.getAllowedWaterDeficit() * $seed.getParam("normal_deficit_limit", 0.6);
+
+        rec.setAdvice("Corn Conditions Optimal (" + $stage + ")");
+
+        rec.setReasoning("Moisture adequate (" + String.format("%.1f%%", $analysis.getCurrentSoilMoisture() * 100) + "). " +
+                         "Deficit: " + String.format("%.1f", $calc.getDeficit()) + " mm (Safe below: " + String.format("%.1f", limit) + " mm).");
+
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        recommendations.add(rec);
+end
+
+
+rule "Monitor Conditions - CORN (Fallback)"
+    salience 1
+    activation-group "corn-irrigation"
+    when
+        $seed   : Seed(seedType == SeedType.CORN)
+        $status : FieldStatus(seedType == SeedType.CORN, $stage : stage, $fid : fieldId)
+        $calc   : WaterDeficitResult(seed == $seed, fieldId == $fid)
+        $analysis : DailyAnalysis()
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId( $fid);
+        rec.setRecommendedSeed(SeedType.CORN);
+        rec.setRecommendationType(RecommendationType.MONITOR_CONDITIONS);
+        rec.setAdvice("Monitor Corn Conditions (" + $stage + ")");
+        rec.setReasoning("Conditions stable for " + $stage + " stage. " +
+            "Deficit: " + String.format("%.1f", $calc.getDeficit()) + " mm. " +
+            "Moisture: " + String.format("%.1f%%", $analysis.getCurrentSoilMoisture() * 100) + ".");
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        rec.getMetrics().put("rule_fired", "corn-monitor-fallback");
+        recommendations.add(rec);
+end

@@ -1,0 +1,193 @@
+[
+  {
+    "id": "timing_urgency",
+    "question": "Did the irrigation recommendation arrive on time?",
+    "targetParameter": "urgent_deficit_factor",
+    "description": "Adjusts how early the system triggers the 'Irrigate Now' alert.",
+    "options": [
+      {
+        "label": "Late, plants were already wilting",
+        "value": -2,
+        "multiplier": 0.90
+      },
+      {
+        "label": "Slightly late",
+        "value": -1,
+        "multiplier": 0.95
+      },
+      {
+        "label": "Right on time",
+        "value": 0,
+        "multiplier": 1.00
+      },
+      {
+        "label": "Too early, soil was still moist",
+        "value": 1,
+        "multiplier": 1.05
+      },
+      {
+        "label": "Way too early / Unnecessary",
+        "value": 2,
+        "multiplier": 1.10
+      }
+    ]
+  },
+  {
+    "id": "moisture_perception",
+    "question": "How did the soil moisture feel to the touch when the alert arrived?",
+    "targetParameter": "urgent_moisture_factor",
+    "description": "Adjusts the system's sensitivity to soil moisture sensor readings.",
+    "options": [
+      {
+        "label": "Completely dry / Dusty",
+        "value": -2,
+        "multiplier": 1.10
+      },
+      {
+        "label": "Drier than expected",
+        "value": -1,
+        "multiplier": 1.05
+      },
+      {
+        "label": "Expected / Normal",
+        "value": 0,
+        "multiplier": 1.00
+      },
+      {
+        "label": "Wet / Muddy",
+        "value": 2,
+        "multiplier": 0.90
+      }
+    ]
+  },
+  {
+    "id": "plant_health_visual",
+    "question": "How did the plants look visually before irrigation?",
+    "targetParameter": "allowedWaterDeficit",
+    "description": "Adjusts the general water holding capacity allowance for the plant.",
+    "options": [
+      {
+        "label": "Lifeless / Yellowing",
+        "value": -2,
+        "multiplier": 0.90
+      },
+      {
+        "label": "Slight wilting",
+        "value": -1,
+        "multiplier": 0.95
+      },
+      {
+        "label": "Healthy and firm",
+        "value": 0,
+        "multiplier": 1.00
+      },
+      {
+        "label": "Lush and green (despite no water)",
+        "value": 1,
+        "multiplier": 1.05
+      }
+    ]
+  },
+  {
+    "id": "heat_reaction",
+    "question": "How did the plants react to the recent high temperatures?",
+    "targetParameter": "maxTemperature",
+    "description": "Adjusts the heat stress threshold.",
+    "options": [
+      {
+        "label": "Burnt / Heavily damaged",
+        "value": -2,
+        "multiplier": 0.95
+      },
+      {
+        "label": "Visible stress",
+        "value": -1,
+        "multiplier": 0.98
+      },
+      {
+        "label": "Handled it well",
+        "value": 0,
+        "multiplier": 1.00
+      },
+      {
+        "label": "No issues at all",
+        "value": 1,
+        "multiplier": 1.02
+      }
+    ]
+  },
+  {
+    "id": "cold_reaction",
+    "question": "Did you notice any frost or cold damage this morning?",
+    "targetParameter": "minTemperature",
+    "description": "Adjusts the frost alert threshold.",
+    "options": [
+      {
+        "label": "Yes, significant damage",
+        "value": -2,
+        "multiplier": 1.10
+      },
+      {
+        "label": "No, everything looks fine",
+        "value": 0,
+        "multiplier": 1.00
+      },
+      {
+        "label": "No, despite colder temps",
+        "value": 2,
+        "multiplier": 0.90
+      }
+    ]
+  },
+  {
+    "id": "rain_delay_decision",
+    "question": "We delayed irrigation due to forecast rain. Was this the right decision?",
+    "targetParameter": "delay_deficit_factor",
+    "description": "Adjusts the risk tolerance when rain is in the forecast.",
+    "options": [
+      {
+        "label": "No, rain didn't come / Plants suffered",
+        "value": -2,
+        "multiplier": 0.90
+      },
+      {
+        "label": "It was risky",
+        "value": -1,
+        "multiplier": 0.95
+      },
+      {
+        "label": "Yes, rain was sufficient",
+        "value": 0,
+        "multiplier": 1.00
+      }
+    ]
+  },
+  {
+    "id": "disease_alert_accuracy",
+    "question": "Did you observe any disease outbreaks that we missed, or were alerts false?",
+    "targetParameter": "disease_rain_factor",
+    "description": "Adjusts the sensitivity of disease risk models based on rainfall.",
+    "options": [
+      {
+        "label": "False Alarm - No disease appeared",
+        "value": 2,
+        "multiplier": 1.15
+      },
+      {
+        "label": "Slightly too sensitive",
+        "value": 1,
+        "multiplier": 1.05
+      },
+      {
+        "label": "Accurate / Normal",
+        "value": 0,
+        "multiplier": 1.00
+      },
+      {
+        "label": "Missed detection - Disease appeared!",
+        "value": -2,
+        "multiplier": 0.85
+      }
+    ]
+  }
+]

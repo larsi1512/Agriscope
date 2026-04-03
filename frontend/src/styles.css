@@ -1,0 +1,102 @@
+@import 'ngx-toastr/toastr';
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 1. Base Toast Style */
+#toast-container > div {
+  opacity: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 15px 15px 15px 50px;
+  width: 350px;
+  backdrop-filter: blur(10px);
+  background-image: none !important;
+  color: #333 !important;
+}
+
+/* 2. Success Message */
+.toast-success {
+  background-color: rgba(220, 255, 220, 0.9) !important;
+  border-left: 5px solid #2ecc71;
+}
+.toast-success::before {
+  content: "✓";
+  position: absolute;
+  left: 15px;
+  top: 16px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #2ecc71;
+}
+
+/* 3. Error Message */
+.toast-error {
+  background-color: rgba(255, 235, 235, 0.9) !important;
+  border-left: 5px solid #e74c3c; /* Red accent on left */
+}
+.toast-error::before {
+  content: "!";
+  position: absolute;
+  left: 18px;
+  top: 16px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #e74c3c;
+}
+
+/* 4. Warning Message */
+.toast-warning {
+  background-color: rgba(255, 243, 205, 0.9) !important;
+  border-left: 5px solid #f39c12;
+}
+.toast-warning::before {
+  content: "⚠";
+  position: absolute;
+  left: 15px;
+  top: 16px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #f39c12;
+}
+
+/* 5. Info Message*/
+.toast-info {
+  background-color: rgba(217, 237, 247, 0.9) !important;
+  border-left: 5px solid #3498db;
+}
+.toast-info::before {
+  content: "ℹ";
+  position: absolute;
+  left: 15px;
+  top: 16px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #3498db;
+}
+
+
+.toast-title {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+.toast-message {
+  font-size: 14px;
+  color: #555;
+}
+
+#toast-container > div:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  transition: all 0.2s ease;
+}

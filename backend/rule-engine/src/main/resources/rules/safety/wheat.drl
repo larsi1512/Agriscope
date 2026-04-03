@@ -1,0 +1,44 @@
+package rules.safety;
+
+import com.agriscope.rule_engine.domain.model.CurrentWeatherData
+import com.agriscope.rule_engine.domain.model.Seed
+import com.agriscope.rule_engine.domain.model.Recommendation
+import com.agriscope.rule_engine.domain.enums.SeedType
+import com.agriscope.rule_engine.domain.enums.RecommendationType
+import com.agriscope.rule_engine.domain.model.FieldStatus
+import com.agriscope.rule_engine.domain.enums.GrowthStage
+
+global java.util.List recommendations;
+
+rule "Wheat - Frost Alert"
+when
+    $seed: Seed(seedType == SeedType.WHEAT)
+    $field: FieldStatus(seedType == SeedType.WHEAT, stage != GrowthStage.READY)
+    $weather: CurrentWeatherData(temperature_2m < $seed.minTemperature)
+then
+    Recommendation rec = new Recommendation();
+    rec.setUserId($weather.getUserId());
+    rec.setRecommendedSeed(SeedType.WHEAT);
+    rec.setRecommendationType(RecommendationType.FROST_ALERT);
+    rec.setAdvice("INSPECT_FIELDS_FOR_FROST_DAMAGE");
+    rec.setReasoning("Temperature (" + String.format("%.1f", $weather.getTemperature_2m()) + "C) below frost risk threshold (" + $seed.getMinTemperature() + "°C)");
+    rec.setWeatherTimestamp($weather.getTime());
+    recommendations.add(rec);
+end
+
+rule "Wheat - Heat Stress Alert"
+when
+    $seed: Seed(seedType == SeedType.WHEAT)
+    $field: FieldStatus(seedType == SeedType.WHEAT, stage != GrowthStage.READY)
+    $weather: CurrentWeatherData(temperature_2m > $seed.heatStressTemperature)
+then
+    Recommendation rec = new Recommendation();
+    rec.setUserId($weather.getUserId());
+    rec.setRecommendedSeed(SeedType.WHEAT);
+    rec.setRecommendationType(RecommendationType.HEAT_ALERT);
+    rec.setAdvice("START_MOBILE_IRRIGATION");
+    rec.setReasoning("Temperature (" + String.format("%.1f", $weather.getTemperature_2m()) + "C) above heat stress threshold (" + $seed.getHeatStressTemperature() + "°C)");
+    rec.setWeatherTimestamp($weather.getTime());
+    recommendations.add(rec);
+end
+

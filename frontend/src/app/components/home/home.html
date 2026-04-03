@@ -1,0 +1,29 @@
+<div class="page-container">
+
+  <app-topbar
+    [showFarmTitle]="true"
+    [farmName]="selectedFarm?.name || null">
+  </app-topbar>
+
+  <div class="body-container">
+
+    <app-sidebar
+      class="sidebar"
+      [showDevControls]="false"
+      (logFarmsEvent)="logFarms()"
+      (loadFarmsEvent)="loadFarms()">
+    </app-sidebar>
+
+    <div class="content-area">
+
+      <div class="left-content">
+        <app-field-grid></app-field-grid>
+      </div>
+
+      <div class="right-content">
+        <app-weather-widget></app-weather-widget>
+        <app-recommendations></app-recommendations>
+      </div>
+    </div>
+  </div>
+</div>

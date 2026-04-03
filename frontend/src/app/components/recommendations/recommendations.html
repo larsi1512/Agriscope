@@ -1,0 +1,165 @@
+<div class="recommendations-widget">
+
+  <!-- ============================================
+     RECOMMENDATIONS WIDGET
+     ============================================ -->
+  <!-- Widget Header -->
+  <div class="widget-header">
+    <img src="assets/icons/recommendation.svg" class="widget-icon" />
+    <h3>Today's Recommendations</h3>
+  </div>
+
+  <div class="widget-content">
+    <!-- No Recommendations State -->
+    <div *ngIf="!hasRecommendations()" class="no-recommendations">
+      <img src="assets/icons/photo.svg" alt="Farmer" class="farmer-icon" />
+      <div class="text-content">
+        <p class="main-text">No recommendations yet</p>
+        <p class="sub-text">Check back later for farming insights</p>
+      </div>
+      <img src="assets/icons/chicken.svg" alt="Chickens" class="chicken-icon" />
+    </div>
+
+    <!-- Has Recommendations State -->
+    <div *ngIf="hasRecommendations()" class="has-recommendations">
+      <img src="assets/icons/photo.svg" alt="Farmer" class="farmer-icon" />
+
+      <div class="recommendation-info">
+        <p class="recommendation-text">
+          You have <span class="count-highlight">{{ getRecommendationsCount() }} new</span><br />
+          recommendation{{ getRecommendationsCount() > 1 ? 's' : '' }}!
+        </p>
+
+        <button class="view-button" (click)="openModal()">
+          View Details
+        </button>
+      </div>
+
+      <img src="assets/icons/chicken.svg" alt="Chickens" class="chicken-icon" />
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     RECOMMENDATIONS MODAL
+     ============================================ -->
+<div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+  <div class="recommendations-modal" (click)="$event.stopPropagation()">
+
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="header-title">
+        <img *ngIf="getCurrentRecommendation() as rec" [src]="getSeedIcon(rec.recommendedSeed)" alt="Seed" class="title-seed-icon" />
+        <h2>Recommendation for {{ formatSeedName(getCurrentRecommendation()?.recommendedSeed) }} Seeds</h2>
+      </div>
+      <div class="header-actions">
+        <button class="clear-all-icon-button" (click)="clearAllRecommendations()" title="Clear All">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
+        <button class="close-button" (click)="closeModal()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Recommendation Counter -->
+    <div class="recommendation-counter">
+      <span>{{ currentRecommendationIndex + 1 }} of {{ getRecommendationsCount() }}</span>
+    </div>
+
+    <!-- Recommendation Card with New Layout -->
+    <div class="recommendation-card" *ngIf="getCurrentRecommendation() as rec">
+
+      <div class="card-content">
+        <!-- Left Side: Farmer Warning Icon -->
+        <div class="farmer-warning-section">
+          <img [src]="getRecommendationIcon(rec.recommendationType)" alt="Warning" class="farmer-warning-icon" />
+
+          <!-- Type Badge under farmer icon -->
+          <div class="type-badge" [style.background-color]="getRecommendationTypeInfo(rec.recommendationType).color">
+            <span class="type-icon">{{ getRecommendationTypeInfo(rec.recommendationType).icon }}</span>
+            <span class="type-label">{{ getRecommendationTypeInfo(rec.recommendationType).label }}</span>
+          </div>
+        </div>
+
+        <!-- Right Side: Content -->
+        <div class="content-section">
+
+          <!-- Time Badge -->
+          <div class="time-badge-top">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>{{ formatExactTime(rec.receivedAt) }}</span>
+          </div>
+
+          <!-- Main Advice Title -->
+          <h3 class="advice-title-main">{{ formatAdviceTitle(rec.advice) }}!</h3>
+
+          <!-- Reasoning Description -->
+          <p class="advice-reasoning">{{ rec.reasoning }}</p>
+
+          <!-- Current Conditions -->
+          <div class="metrics-section" *ngIf="rec.metrics &&  rec.metrics.deficit_amount !== undefined">
+            <h4 class="metrics-title">Current Conditions</h4>
+            <div class="metrics-grid">
+              <div class="metric-item" *ngIf="rec.metrics.deficit_amount !== undefined">
+                <span class="metric-icon">💧</span>
+                <div class="metric-info">
+                  <span class="metric-label">Water Balance</span>
+                  <span class="metric-value">{{ rec.metrics.deficit_amount > 0 ? '+' : '' }}{{ rec.metrics.deficit_amount.toFixed(1) }} mm</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seed and Farm Info -->
+          <div class="seed-farm-info">
+            <img [src]="getSeedIcon(rec.recommendedSeed)" alt="{{ rec.recommendedSeed }}" class="seed-icon-small" />
+            <span class="seed-name-inline">{{ rec.recommendedSeed }}</span>
+          </div>
+
+          <!-- Action Buttons - Mark as Read + Clear All -->
+          <div class="card-actions">
+            <button class="action-button mark-read-small" (click)="deleteCurrentRecommendation($event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Mark as Read</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="modal-navigation">
+      <button
+        class="nav-button prev"
+        [disabled]="!hasPrevious()"
+        (click)="previousRecommendation()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+        <span>Previous</span>
+      </button>
+
+      <button
+        class="nav-button next"
+        [disabled]="!hasNext()"
+        (click)="nextRecommendation()">
+        <span>Next</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,110 @@
+<div class="page-container">
+
+  <app-topbar [showFarmTitle]="false"></app-topbar>
+
+  <div class="content-area">
+    <div class="farm-content">
+      <div class="newFarm-card">
+
+        <!-- First farm welcome message -->
+        <div class="first-farm-banner" *ngIf="isFirstFarm">
+          <svg class="welcome-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <div>
+            <h3>Welcome to Agriscope!</h3>
+            <p>Let's create your first farm to get started</p>
+          </div>
+        </div>
+
+        <h1 class="newFarm-title">
+          <span>{{ isFirstFarm ? 'Create Your First Farm' : 'Add New Farm' }}</span>
+          <img src="" class="newFarm-icon">
+        </h1>
+
+        <form (ngSubmit)="onSubmit()" #farmForm="ngForm">
+
+          <!-- Error Message -->
+          <div *ngIf="errorMessage" class="error-banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {{ errorMessage }}
+          </div>
+
+          <!-- Farm Name -->
+          <div class="form-group">
+            <label>Farm Name *</label>
+            <input type="text"
+                   name="farmName"
+                   [(ngModel)]="farm.name"
+                   placeholder="Enter farm name"
+                   required
+                   [class.error]="errorMessage && !farm.name">
+          </div>
+
+          <!-- Soil Type -->
+          <div class="form-group mt-3">
+            <label for="soilType">Soil Type</label>
+            <select id="soilType"
+                    name="soilType"
+                    class="form-control"
+                    [(ngModel)]="selectedSoil"
+                    required>
+              <option value="" disabled selected>Select soil type...</option>
+              <option *ngFor="let s of soilTypes" [value]="s.id">
+                {{ s.name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Location Map -->
+          <div class="form-group">
+            <label>Location *</label>
+            <div class="map-card" [class.error]="errorMessage && (!farm.latitude || !farm.longitude)">
+              <app-map [externalCoords]="selectedCoords"
+                       (locationSelected)="onLocationSelected($event)">
+              </app-map>
+            </div>
+            <p class="map-hint">Click on the map to select your farm's location</p>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit"
+                  [disabled]="farmForm.invalid || isSubmitting"
+                  class="submit-btn"
+                  (click)="addNewFarm()">
+            <span *ngIf="!isSubmitting">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 4v16m8-8H4"/>
+              </svg>
+              {{ isFirstFarm ? 'Create Farm & Continue' : 'Add Farm' }}
+            </span>
+            <span *ngIf="isSubmitting" class="loading-spinner">
+              <svg class="spinner" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" opacity="0.25"/>
+                <path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+              </svg>
+              Creating...
+            </span>
+          </button>
+
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Back Button (hidden for first farm) -->
+  <button class="back-button" (click)="goBack()" *ngIf="!isFirstFarm">
+    <svg class="back-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+    </svg>
+    <span>Back</span>
+  </button>
+
+</div>

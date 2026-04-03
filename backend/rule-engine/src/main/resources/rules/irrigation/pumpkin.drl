@@ -1,0 +1,202 @@
+package rules.irrigation;
+
+import com.agriscope.rule_engine.domain.model.Seed;
+import com.agriscope.rule_engine.domain.model.FarmDetails;
+import com.agriscope.rule_engine.domain.model.Recommendation;
+import com.agriscope.rule_engine.domain.model.FieldStatus;
+import com.agriscope.rule_engine.domain.dto.DailyAnalysis;
+import com.agriscope.rule_engine.domain.enums.SeedType;
+import com.agriscope.rule_engine.domain.enums.SoilType;
+import com.agriscope.rule_engine.domain.enums.RecommendationType;
+import com.agriscope.rule_engine.domain.enums.GrowthStage;
+
+global java.util.List recommendations;
+
+
+rule "Pumpkin - Ready to Harvest "
+    salience 200
+    activation-group "pumpkin-irrigation"
+    when
+        $seed   : Seed(seedType == SeedType.PUMPKIN)
+        $status : FieldStatus(seedType == SeedType.PUMPKIN, stage == GrowthStage.READY, $fid : fieldId)
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.PUMPKIN);
+        rec.setRecommendationType(RecommendationType.READY_TO_HARVEST);
+        rec.setAdvice(" STOP Irrigation - Prevent Fruit Rot");
+        rec.setReasoning("Pumpkin is in 'Ready' stage. Wet soil at this stage causes 'belly rot' on fruits and reduces storage life significantly.");
+        recommendations.add(rec);
+end
+
+rule "Delay Irrigation - PUMPKIN"
+    salience 99
+    activation-group "pumpkin-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.PUMPKIN, $stage : stage, $fid : fieldId)
+        $farm   : FarmDetails($soil : soilType)
+        $seed   : Seed(seedType == SeedType.PUMPKIN)
+
+        $calc   : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit > $seed.allowedWaterDeficit * $seed.getParam("delay_deficit_factor", 0.6)
+        )
+
+        $analysis : DailyAnalysis(
+            currentSoilMoisture < $seed.minSoilMoisture,
+            totalRain > $seed.heavyRainThreshold
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.PUMPKIN);
+        rec.setRecommendationType(RecommendationType.DELAY_IRRIGATION);
+        rec.setAdvice("Delay Irrigation (" + $stage + ") - Heavy Rain Forecast");
+        rec.setReasoning("Pumpkins are sensitive to overwatering and fungal issues. Rain forecast (" +
+                         String.format("%.1f", $analysis.getTotalRain()) + "mm) is sufficient.");
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        recommendations.add(rec);
+end
+
+
+rule "Irrigation - PUMPKIN - Urgent"
+    salience 50
+    activation-group "pumpkin-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.PUMPKIN, $stage : stage, $fid : fieldId)
+        $farm   : FarmDetails($soil : soilType)
+        $seed   : Seed(seedType == SeedType.PUMPKIN)
+
+        $calc : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit > $seed.allowedWaterDeficit * $seed.getParam("urgent_deficit_factor", 0.8)
+        )
+
+        $analysis : DailyAnalysis(
+            currentSoilMoisture < $seed.minSoilMoisture * $seed.getParam("urgent_moisture_factor", 1.1)
+        )
+
+        not DailyAnalysis(totalRain > $seed.heavyRainThreshold)
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.PUMPKIN);
+        rec.setRecommendationType(RecommendationType.IRRIGATE_NOW);
+
+        String urgency = "URGENT";
+        String context = "";
+        if ($stage == GrowthStage.MATURE) {
+            urgency = "CRITICAL";
+            context = "Fruit set/enlargement stage: Water stress now causes fruit abortion.";
+        } else if ($stage == GrowthStage.YOUNG) {
+            context = "Vine running stage: Rapid vegetative growth requires consistent moisture.";
+        } else if ($stage == GrowthStage.SEEDLING) {
+            context = "Seedling stage: Maintain moisture but avoid saturation.";
+        } else {
+             context = "Large leaf area causing rapid water loss.";
+        }
+
+        double threshold = $seed.getAllowedWaterDeficit() * $seed.getParam("urgent_deficit_factor", 0.8);
+
+        rec.setAdvice(urgency + ": Irrigate Pumpkin (" + $stage + ")");
+        rec.setReasoning(context + " Deficit: " + String.format("%.1f", $calc.getDeficit()) +
+                         " mm (Threshold: " + String.format("%.1f", threshold) + " mm).");
+
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        rec.getMetrics().put("crop_stage", $stage.toString());
+        recommendations.add(rec);
+end
+
+
+rule "Irrigation Soon Warning - PUMPKIN"
+    salience 40
+    activation-group "pumpkin-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.PUMPKIN, $stage : stage, $fid : fieldId)
+        $seed   : Seed(seedType == SeedType.PUMPKIN)
+
+        $calc : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit > $seed.allowedWaterDeficit * $seed.getParam("soon_deficit_min", 0.5),
+            deficit <= $seed.allowedWaterDeficit * $seed.getParam("soon_deficit_max", 0.8)
+        )
+
+        $analysis : DailyAnalysis(
+            currentSoilMoisture >= $seed.minSoilMoisture * $seed.getParam("soon_moisture_min", 0.9),
+            currentSoilMoisture < $seed.minSoilMoisture * $seed.getParam("soon_moisture_max", 1.1)
+        )
+
+        not DailyAnalysis(totalRain > $seed.heavyRainThreshold)
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.PUMPKIN);
+        rec.setRecommendationType(RecommendationType.IRRIGATE_SOON);
+
+        double minThr = $seed.getAllowedWaterDeficit() * $seed.getParam("soon_deficit_min", 0.5);
+        double maxThr = $seed.getAllowedWaterDeficit() * $seed.getParam("soon_deficit_max", 0.8);
+
+        rec.setAdvice("Prepare Irrigation for Pumpkin (" + $stage + ")");
+        rec.setReasoning("Early stress signs. Deficit: " + String.format("%.1f", $calc.getDeficit()) +
+                         " mm. Warning Range: " + String.format("%.1f", minThr) + " - " + String.format("%.1f", maxThr) + " mm.");
+
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        recommendations.add(rec);
+end
+
+
+rule "No Action Needed - PUMPKIN"
+    salience 10
+    activation-group "pumpkin-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.PUMPKIN, $stage : stage, $fid : fieldId)
+        $seed   : Seed(seedType == SeedType.PUMPKIN)
+
+        $calc : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit <= $seed.allowedWaterDeficit * $seed.getParam("normal_deficit_limit", 0.5)
+        )
+        $analysis : DailyAnalysis(
+            currentSoilMoisture >= $seed.minSoilMoisture
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.PUMPKIN);
+        rec.setRecommendationType(RecommendationType.CONTINUE_NORMAL);
+
+        double limit = $seed.getAllowedWaterDeficit() * $seed.getParam("normal_deficit_limit", 0.5);
+
+        rec.setAdvice("Pumpkin Conditions Optimal (" + $stage + ")");
+        rec.setReasoning("Moisture adequate (" + String.format("%.1f%%", $analysis.getCurrentSoilMoisture() * 100) +
+                         "). Deficit: " + String.format("%.1f", $calc.getDeficit()) + " mm (Safe below: " + String.format("%.1f", limit) + " mm).");
+
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        recommendations.add(rec);
+end
+
+
+rule "Monitor Conditions - PUMPKIN (Fallback)"
+    salience 1
+    activation-group "pumpkin-irrigation"
+    when
+        $seed   : Seed(seedType == SeedType.PUMPKIN)
+        $status : FieldStatus(seedType == SeedType.PUMPKIN, $stage : stage, $fid : fieldId)
+        $calc   : WaterDeficitResult(seed == $seed, fieldId == $fid)
+        $analysis : DailyAnalysis()
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.PUMPKIN);
+        rec.setRecommendationType(RecommendationType.MONITOR_CONDITIONS);
+        rec.setAdvice("Monitor Pumpkin Conditions (" + $stage + ")");
+        rec.setReasoning("Conditions stable. Monitor for powdery mildew if humidity is high. " +
+            "Deficit: " + String.format("%.1f", $calc.getDeficit()) + " mm.");
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        rec.getMetrics().put("rule_fired", "pumpkin-monitor-fallback");
+        recommendations.add(rec);
+end

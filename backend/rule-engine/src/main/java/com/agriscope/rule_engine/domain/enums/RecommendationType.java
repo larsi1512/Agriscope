@@ -1,0 +1,23 @@
+package com.agriscope.rule_engine.domain.enums;
+
+public enum RecommendationType {
+    FROST_ALERT,
+    HEAT_ALERT,
+    STORM_ALERT,
+
+    SAFETY_ALERT,
+    DELAY_OPERATIONS,
+
+    IRRIGATE_NOW,
+    IRRIGATE_SOON,
+    DELAY_IRRIGATION,
+
+    READY_TO_HARVEST,
+    CONTINUE_NORMAL,
+    MONITOR_CONDITIONS,
+    DISEASE_PREVENTION,
+    NUTRIENT_CHECK,
+    PLANNING_ALERT,
+    HEAT_STRESS_PREVENTION,
+    PEST_RISK
+}

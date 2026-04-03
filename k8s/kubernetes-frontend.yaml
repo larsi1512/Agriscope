@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: registry.reset.inso-w.at/2025ws-ase-pr-group/25ws-ase-pr-inso-01/frontend:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "96Mi"
+              ephemeral-storage: "50Mi"
+            limits:
+              cpu: "75m"
+              memory: "192Mi"
+              ephemeral-storage: "150Mi"
+      imagePullSecrets:
+        - name: secret-dockercfg
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s-frontend
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend-ingress
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  rules:
+    - host: "25ws-ase-pr-inso-01.apps.student.inso-w.at"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: s-frontend
+                port:
+                  number: 80

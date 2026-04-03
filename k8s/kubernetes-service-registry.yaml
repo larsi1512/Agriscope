@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-registry
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-registry
+  template:
+    metadata:
+      labels:
+        app: service-registry
+    spec:
+      containers:
+        - name: service-registry
+          image: registry.reset.inso-w.at/2025ws-ase-pr-group/25ws-ase-pr-inso-01/service-registry:latest
+          ports:
+            - containerPort: 8761
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "kubernetes"
+            - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+              value: "true"
+          resources:
+            requests:
+              cpu: "40m"
+              memory: "150Mi"
+              ephemeral-storage: "50Mi"
+            limits:
+              cpu: "125m"
+              memory: "300Mi"
+              ephemeral-storage: "100Mi"
+      imagePullSecrets:
+        - name: secret-dockercfg
+  revisionHistoryLimit: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s-service-registry
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  type: ClusterIP
+  selector:
+    app: service-registry
+  ports:
+    - name: http
+      port: 8761
+      targetPort: 8761
+      protocol: TCP

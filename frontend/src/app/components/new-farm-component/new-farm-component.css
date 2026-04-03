@@ -1,0 +1,428 @@
+.page-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('/assets/images/login_background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.35) 55%,
+    rgba(255, 255, 255, 0.55) 100%
+  );
+  z-index: 0;
+}
+
+/* ============================================
+   CONTENT AREA
+   ============================================ */
+
+.content-area {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 70px;
+  position: relative;
+  z-index: 2;
+  padding: 40px 20px;
+  overflow-y: auto;
+}
+
+.farm-content {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.newFarm-card {
+  width: 100%;
+  max-width: 550px;
+  padding: 40px;
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.40);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 10px 35px rgba(0,0,0,0.18);
+  position: relative;
+}
+
+/* ============================================
+   FIRST FARM BANNER
+   ============================================ */
+
+.first-farm-banner {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  margin-bottom: 25px;
+  background: linear-gradient(135deg, rgba(82, 167, 34, 0.15) 0%, rgba(107, 193, 52, 0.2) 100%);
+  border: 2px solid rgba(82, 167, 34, 0.3);
+  border-radius: 15px;
+  animation: fadeIn 0.5s ease;
+}
+
+.welcome-icon {
+  width: 40px;
+  height: 40px;
+  color: #52A722;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+.first-farm-banner h3 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #52A722;
+  margin: 0 0 5px 0;
+}
+
+.first-farm-banner p {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  color: #3d7a19;
+  margin: 0;
+}
+
+/* ============================================
+   TITLE
+   ============================================ */
+
+.newFarm-icon {
+  width: 60px;
+  height: auto;
+  display: block;
+}
+
+.newFarm-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Poppins', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 25px;
+}
+
+/* ============================================
+   FORM ELEMENTS
+   ============================================ */
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+  color: #333;
+}
+
+input, select {
+  width: 100%;
+  padding: 12px 16px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  border-radius: 10px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #52A722;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(82, 167, 34, 0.15);
+}
+
+/* Error state */
+input.error, select.error {
+  border-color: #dc3545;
+  background: rgba(220, 53, 69, 0.05);
+}
+
+input.error:focus, select.error:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+}
+
+/* ============================================
+   ERROR BANNER
+   ============================================ */
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  background: rgba(220, 53, 69, 0.1);
+  border: 2px solid rgba(220, 53, 69, 0.3);
+  border-radius: 10px;
+  color: #721c24;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  animation: shake 0.5s ease;
+}
+
+.error-banner svg {
+  width: 24px;
+  height: 24px;
+  color: #dc3545;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   MAP CARD
+   ============================================ */
+
+.map-card {
+  padding: 15px;
+  border-radius: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+}
+
+.map-card.error {
+  border-color: #dc3545;
+  background: rgba(220, 53, 69, 0.05);
+}
+
+.map-hint {
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  color: #666;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* ============================================
+   SELECT DROPDOWN
+   ============================================ */
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpolygon points='0,0 12,0 6,6' style='fill:%23666;'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 12px 12px;
+  cursor: pointer;
+}
+
+/* ============================================
+   SUBMIT BUTTON
+   ============================================ */
+
+.submit-btn {
+  width: 100%;
+  padding: 16px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e46b2b 0%, #d96226 100%);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(228, 107, 43, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.submit-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.5;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f07535 0%, #e46b2b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(228, 107, 43, 0.4);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ============================================
+   LOADING SPINNER
+   ============================================ */
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   BACK BUTTON
+   ============================================ */
+
+.back-button {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 28px;
+  background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #8B4513 100%);
+  border: 4px solid #5C2E0A;
+  border-radius: 50px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #FFF8DC;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 100;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.2),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.back-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.05) 2px,
+      rgba(0, 0, 0, 0.05) 4px
+    );
+  border-radius: 50px;
+  pointer-events: none;
+}
+
+.back-arrow {
+  width: 24px;
+  height: 24px;
+  color: #FFF8DC;
+  filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.5));
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.back-button span {
+  position: relative;
+  z-index: 1;
+}
+
+.back-button:hover {
+  transform: translateY(-4px);
+  background: linear-gradient(135deg, #9B5523 0%, #B06333 50%, #9B5523 100%);
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.5),
+    inset 0 2px 6px rgba(255, 255, 255, 0.3),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.back-button:hover .back-arrow {
+  transform: translateX(-4px);
+}
+
+.back-button:active {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 15px rgba(0, 0, 0, 0.4),
+    inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .newFarm-card {
+    padding: 30px 25px;
+  }
+
+  .newFarm-title {
+    font-size: 24px;
+  }
+
+  .newFarm-icon {
+    width: 50px;
+  }
+
+  .back-button {
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+
+  .back-arrow {
+    width: 20px;
+    height: 20px;
+  }
+}

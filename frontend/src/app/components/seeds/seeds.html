@@ -1,0 +1,201 @@
+<div class="page-container">
+  <app-topbar [showFarmTitle]="false"></app-topbar>
+
+  <div class="body-container">
+    <app-sidebar class="sidebar"></app-sidebar>
+
+    <div class="content-area">
+      <div class="seeds-grid">
+        <div *ngFor="let seed of seeds" class="seed-card">
+
+          <!-- Card Header with Icon and Name -->
+          <div class="seed-header">
+            <div class="seed-icon-wrapper">
+              <img class="seed-icon" [src]="getSeedIcon(seed.seedType)" [alt]="seed.displayName" />
+            </div>
+            <div class="seed-title-section">
+              <h3 class="seed-name">{{ formatSeedType(seed.seedType) }}</h3>
+              <p class="seed-scientific">{{ seed.scientificName }}</p>
+            </div>
+          </div>
+
+          <!-- Quick Info Grid -->
+          <div class="quick-info-grid">
+
+            <!-- Growth Time -->
+            <div class="info-item">
+              <div class="info-icon">⏱️</div>
+              <div class="info-content">
+                <span class="info-label">Ready in</span>
+                <span class="info-value">{{ seed.daysToReady }} days</span>
+              </div>
+            </div>
+
+            <!-- Temperature -->
+            <div class="info-item">
+              <div class="info-icon">🌡️</div>
+              <div class="info-content">
+                <span class="info-label">Temperature</span>
+                <span class="info-value">{{ seed.minTemperature }}°C - {{ seed.maxTemperature }}°C</span>
+              </div>
+            </div>
+
+            <!-- Water Need -->
+            <div class="info-item">
+              <div class="info-icon">💧</div>
+              <div class="info-content">
+                <span class="info-label">Water Need</span>
+                <span class="info-value">{{ seed.waterRequirement }} l/m²</span>
+              </div>
+            </div>
+
+            <!-- Soil Moisture -->
+            <div class="info-item">
+              <div class="info-icon">🚿</div>
+              <div class="info-content">
+                <span class="info-label">Min Soil Moisture</span>
+                <span class="info-value">{{ seed.minSoilMoisture }}%</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Details Button -->
+          <button class="details-btn" (click)="openDetailsModal(seed)">
+            View Full Details
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Details Modal -->
+  <div class="modal-overlay" *ngIf="selectedSeed" (click)="closeDetailsModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="modal-title-section">
+          <img class="modal-seed-icon" [src]="getSeedIcon(selectedSeed.seedType)" [alt]="selectedSeed.displayName" />
+          <div>
+            <h2 class="modal-title">{{ formatSeedType(selectedSeed.seedType) }}</h2>
+            <p class="modal-subtitle">{{ selectedSeed.scientificName }}</p>
+          </div>
+        </div>
+        <button class="close-button" (click)="closeDetailsModal()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+
+        <!-- Two Column Layout -->
+        <div class="sections-wrapper">
+
+          <!-- Left Column -->
+          <div class="section-column">
+
+            <!-- Growth Timeline Section -->
+            <div class="detail-section">
+              <h3 class="section-title">
+                <span>Growth Timeline</span>
+              </h3>
+              <div class="detail-list">
+                <div class="detail-item">
+                  <span class="detail-label">Young Stage</span>
+                  <span class="detail-value">{{ selectedSeed.daysToYoung }} days</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Mature Stage</span>
+                  <span class="detail-value">{{ selectedSeed.daysToMature }} days</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Ready to Harvest</span>
+                  <span class="detail-value">{{ selectedSeed.daysToReady }} days</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Water & Soil -->
+            <div class="detail-section">
+              <h3 class="section-title">
+                <span>Water & Soil</span>
+              </h3>
+              <div class="detail-list">
+                <div class="detail-item">
+                  <span class="detail-label">Water Requirement</span>
+                  <span class="detail-value">{{ selectedSeed.waterRequirement }} l/m²</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Min Soil Moisture</span>
+                  <span class="detail-value">{{ selectedSeed.minSoilMoisture }}%</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Water Deficit Tolerance</span>
+                  <span class="detail-value">{{ selectedSeed.allowedWaterDeficit }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Heavy Rain Threshold</span>
+                  <span class="detail-value warning">{{ selectedSeed.heavyRainThreshold }} mm</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column -->
+          <div class="section-column">
+
+            <!-- Temperature Requirements -->
+            <div class="detail-section">
+              <h3 class="section-title">
+                <span>Temperature</span>
+              </h3>
+              <div class="detail-list">
+                <div class="detail-item">
+                  <span class="detail-label">Min Temperature</span>
+                  <span class="detail-value">{{ selectedSeed.minTemperature }}°C</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Max Temperature</span>
+                  <span class="detail-value">{{ selectedSeed.maxTemperature }}°C</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Disease & Environmental Risks -->
+            <div class="detail-section">
+              <h3 class="section-title">
+                <span>Risk Factors</span>
+              </h3>
+              <div class="detail-list">
+                <div class="detail-item">
+                  <span class="detail-label">Disease Temp (Min)</span>
+                  <span class="detail-value">{{ selectedSeed.diseaseRiskMinTemp }}°C</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Disease Temp (Max)</span>
+                  <span class="detail-value">{{ selectedSeed.diseaseRiskMaxTemp }}°C</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Disease Rain Threshold</span>
+                  <span class="detail-value">{{ selectedSeed.diseaseRainThreshold }} mm</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Max Wind Tolerance</span>
+                  <span class="detail-value">{{ selectedSeed.maxWindTolerance }} km/h</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

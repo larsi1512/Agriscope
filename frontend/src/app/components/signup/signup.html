@@ -1,0 +1,119 @@
+<div class="page-container">
+
+  <div class="content-area">
+
+    <div class="left-content"></div>
+
+    <div class="right-content">
+      <div class="signup-card">
+
+        <h1 class="signup-title">
+          Get started today!
+        </h1>
+
+        <form (ngSubmit)="onSubmit()" #signupForm="ngForm">
+
+          <label>Name</label>
+          <input type="text"
+                 name="firstName"
+                 [(ngModel)]="signupData.firstName"
+                 required
+                 placeholder="Max"
+                 [class.error-input]="errorMap['firstName']">
+          <div *ngIf="errorMap['firstName']" class="error-msg">
+            {{ errorMap['firstName'] }}
+          </div>
+
+          <label>Surname</label>
+          <input type="text"
+                 name="lastName"
+                 [(ngModel)]="signupData.lastName"
+                 required
+                 placeholder="Mustermann"
+                 [class.error-input]="errorMap['lastName']">
+          <div *ngIf="errorMap['lastName']" class="error-msg">
+            {{ errorMap['lastName'] }}
+          </div>
+
+          <label>Email</label>
+          <input type="email"
+                 name="email"
+                 [(ngModel)]="signupData.email"
+                 required
+                 email
+                 placeholder="username@email.com"
+                 [class.error-input]="errorMap['email']">
+          <div *ngIf="errorMap['email']" class="error-msg">
+            {{ errorMap['email'] }}
+          </div>
+
+          <label>Password</label>
+          <div class="password-row">
+            <input [type]="showPassword ? 'text' : 'password'"
+                   name="password"
+                   [(ngModel)]="signupData.password"
+                   required
+                   placeholder="Password"
+                   [class.error-input]="errorMap['password']">
+
+            <!-- Eye icon toggle for password -->
+            <button type="button"
+                    class="password-toggle"
+                    (click)="togglePasswordVisibility()"
+                    tabindex="-1">
+              <img *ngIf="!showPassword"
+                   src="assets/icons/eye-closed.svg"
+                   alt="Show password"
+                   class="eye-icon">
+              <img *ngIf="showPassword"
+                   src="assets/icons/eye-open.svg"
+                   alt="Hide password"
+                   class="eye-icon">
+            </button>
+          </div>
+          <div *ngIf="errorMap['password']" class="error-msg">
+            {{ errorMap['password'] }}
+          </div>
+
+          <label>Retype your password</label>
+          <div class="password-row">
+            <input [type]="showPassword2 ? 'text' : 'password'"
+                   name="password2"
+                   [(ngModel)]="signupData.password2"
+                   required
+                   placeholder="Password"
+                   [class.error-input]="errorMap['password2']">
+
+            <button type="button"
+                    class="password-toggle"
+                    (click)="togglePassword2Visibility()"
+                    tabindex="-1">
+              <img *ngIf="!showPassword2"
+                   src="assets/icons/eye-closed.svg"
+                   alt="Show password"
+                   class="eye-icon">
+              <img *ngIf="showPassword2"
+                   src="assets/icons/eye-open.svg"
+                   alt="Hide password"
+                   class="eye-icon">
+            </button>
+          </div>
+          <div *ngIf="errorMap['password2']" class="error-msg">
+            {{ errorMap['password2'] }}
+          </div>
+
+          <button type="submit" [disabled]="signupForm.invalid" class="signup-btn">Sign up</button>
+
+        </form>
+
+        <div class="signin-row">
+          Already have an account?
+          <a href="login">Sign in</a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>

@@ -1,0 +1,62 @@
+package rules.irrigation;
+
+import com.agriscope.rule_engine.domain.model.Seed;
+import com.agriscope.rule_engine.domain.model.FarmDetails;
+import com.agriscope.rule_engine.domain.model.Recommendation;
+import com.agriscope.rule_engine.domain.dto.DailyAnalysis;
+import com.agriscope.rule_engine.domain.enums.SeedType;
+import com.agriscope.rule_engine.domain.enums.SoilType;
+import com.agriscope.rule_engine.domain.enums.RecommendationType
+import com.agriscope.rule_engine.domain.enums.GrowthStage;
+
+global java.util.List recommendations;
+
+declare WaterDeficitResult
+    seed : Seed
+    fieldId : String
+    deficit : double
+    effectiveRain : double
+    plantDemand : double
+end
+
+function double getSoilEfficiency(SoilType type) {
+    if (type == SoilType.CLAY) return 0.95;
+    if (type == SoilType.LOAM) return 0.85;
+    if (type == SoilType.SILT) return 0.80;
+    if (type == SoilType.PEAT) return 0.80;
+    if (type == SoilType.CHALKY) return 0.70;
+    return 0.80;
+}
+
+function double getStageCoefficient(GrowthStage stage) {
+    if (stage == GrowthStage.SEEDLING) return 0.40;
+    if (stage == GrowthStage.YOUNG)    return 0.80;
+    if (stage == GrowthStage.MATURE)   return 1.10;
+    if (stage == GrowthStage.READY)    return 0.50;
+    return 1.0;
+}
+
+rule "Calculate Water Deficit Generic"
+    salience 100
+    when
+        $farm     : FarmDetails($soil : soilType)
+        $analysis : DailyAnalysis()
+        $seed     : Seed($baseKc : seedCoefficient, $sType : seedType)
+        $status   : FieldStatus(seedType == $sType, $stage : stage, $fid : fieldId)
+    then
+        double stageFactor = getStageCoefficient($stage);
+        double adjustedKc = $baseKc * stageFactor;
+
+        double demand = $analysis.getTotalEt0() * adjustedKc;
+        double effRain = $analysis.getTotalRain() * getSoilEfficiency($soil);
+        double result = demand - effRain;
+
+        WaterDeficitResult calc = new WaterDeficitResult();
+        calc.setSeed($seed);
+        calc.setFieldId($fid);
+        calc.setDeficit(result);
+        calc.setEffectiveRain(effRain);
+        calc.setPlantDemand(demand);
+
+        insert(calc);
+end

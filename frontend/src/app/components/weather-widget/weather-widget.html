@@ -1,0 +1,62 @@
+<div class="weather-widget" [style.background]="weatherInfo?.background || 'linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%)'">
+  <div class="weather-overlay">
+    <div class="top-section">
+      <!-- Location -->
+      <div class="location-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+        <span>{{ locationName }}</span>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="weather-content" *ngIf="weatherData && weatherInfo; else loading">
+      <!-- Day, Date, Icon -->
+      <div class="center-section">
+        <!-- Day and Date -->
+        <div class="date-info">
+          <div class="day">{{ getFormattedDate().split(',')[0] }}</div>
+          <div class="date-time">{{ getFormattedDate().split(',')[1] }}</div>
+        </div>
+
+        <!-- Weather Icon -->
+        <div class="weather-icon-large">
+          {{ weatherInfo.icon }}
+        </div>
+      </div>
+
+      <!-- Temperature and Description -->
+      <div class="right-section">
+        <div class="temperature-display">
+          <div class="main-temp">{{ weatherData.temp | number: '1.0-0' }}°C</div>
+        </div>
+
+        <div class="weather-description">{{ weatherInfo.description }}</div>
+
+        <div class="feels-like">Feels like {{ getFeelsLikeTemp() }}°</div>
+      </div>
+    </div>
+
+    <div class="last-updated" *ngIf="lastUpdated && weatherData">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      <span>{{ getTimeSinceUpdate() }}</span>
+    </div>
+
+    <!-- Loading State -->
+    <ng-template #loading>
+      <div class="loading-state">
+        <div class="loading-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 6l-9.5 9.5-5-5L1 18"></path>
+          </svg>
+        </div>
+        <p>Waiting for weather data...</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

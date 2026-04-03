@@ -1,0 +1,28 @@
+<div class="topbar-container">
+  <div class="topbar-left">
+    <img src="assets/icons/logo.svg" class="topbar-icon logo-icon" (click)="goToHome()"/>
+
+    <div class="farm-title-section" *ngIf="showFarmTitle">
+      <h1 class="farm-name">{{ farmName || 'No Farm Selected' }}</h1>
+      <p class="farm-subtitle">Farm</p>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <app-alerts-notification></app-alerts-notification>
+    <div class="menu-wrapper">
+      <img src="assets/icons/menu.svg" class="topbar-icon" (click)="toggleMenu()" />
+
+      <div class="wooden-dropdown" *ngIf="isMenuOpen">
+        <div class="dropdown-item" (click)="goToProfile()">
+          <img src="assets/icons/my_profile.svg" class="dropdown-icon" />
+          <span>My Profile</span>
+        </div>
+        <div class="dropdown-item" (click)="logout()">
+          <img src="assets/icons/logout_app.svg" class="dropdown-icon" />
+          <span>Logout</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

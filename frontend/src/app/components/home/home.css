@@ -1,0 +1,88 @@
+/* ============================================
+   PAGE CONTAINER
+   ============================================ */
+
+.page-container {
+  height: 100vh;
+  width: 100vw;
+
+  background-image: url('/assets/images/background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================
+   BODY CONTAINER
+   ============================================ */
+
+.body-container {
+  display: flex;
+  margin-top: 70px;
+  height: calc(100vh - 70px);
+  width: 100%;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.content-area {
+  flex: 1;
+  display: flex;
+  gap: 40px;
+  padding: 40px 40px 40px 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  align-items: flex-start;
+}
+
+.left-content {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.right-content {
+  width: 450px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-top: 20px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1200px) {
+  .content-area {
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .right-content {
+    width: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-area {
+    flex-direction: column;
+  }
+
+  .right-content {
+    width: 100%;
+  }
+
+  .sidebar {
+    width: 200px;
+  }
+}

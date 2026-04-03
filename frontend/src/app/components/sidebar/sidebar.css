@@ -1,0 +1,392 @@
+/* ============================================
+   SIDEBAR CONTAINER
+   ============================================ */
+
+.sidebar-container {
+  width: 320px;
+  height: 100vh;
+  position: fixed;
+  top: 70px;
+  left: 0;
+  z-index: 10;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 80px;
+
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(22px);
+
+  border-radius: 0 35px 35px 0;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.12);
+}
+
+/* ============================================
+   SIDEBAR HEADER
+   User avatar + username
+   ============================================ */
+
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 45px;
+}
+
+.sidebar-header .avatar {
+  width: 105px;
+  height: 105px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.sidebar-header .username {
+  margin-top: 10px;
+  font-family: "Poppins", sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* ============================================
+   MENU ITEMS
+   ============================================ */
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 80px 13px 28px;
+
+  border-radius: 18px;
+  font-family: "Poppins", sans-serif;
+  font-size: 18px;
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.menu-item.has-dropdown {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0;
+
+}
+
+.menu-item.has-dropdown .menu-item-content {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 90%;
+  padding: 20px 0px 13px 28px;
+  border-radius: 18px;
+  /* transition: all 0.75s ease; */
+}
+
+.menu-item img {
+  width: 56px;
+  height: 56px;
+  margin-left: 18px;
+  transition: transform 0.2s ease;
+}
+
+.menu-item span {
+  margin-left: 4px;
+  transition: transform 0.2s ease;
+}
+
+/* ============================================
+   Hover and active state animations
+   ============================================ */
+
+.menu-item:hover {
+  background: rgba(0, 0, 0, 0.06);
+  transform: translateX(8px);
+}
+
+.menu-item.has-dropdown:hover {
+  background: transparent;
+  transform: none;
+}
+
+.menu-item.has-dropdown .menu-item-content:hover {
+  background: rgba(0, 0, 0, 0.06);
+  transform: translateX(8px);
+}
+
+.menu-item:hover img {
+  transform: scale(1.15);
+}
+
+.menu-item:hover span {
+  transform: translateX(3px);
+}
+
+.menu-item:active {
+  transform: translateX(4px) scale(0.98);
+}
+
+/* ============================================
+   DROPDOWN FOR MY FARMS
+   ============================================ */
+
+.farms-dropdown {
+  position: relative;
+  left: 0;
+  top: 0;
+  margin-top: 0;
+  width: 100%;
+  border-radius: 18px;
+  padding: 0;
+  /* box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); */
+  backdrop-filter: blur(22px);
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: all 0.9s ease;
+  z-index: 100;
+}
+
+.menu-item.has-dropdown:hover .farms-dropdown {
+  max-height: 500px;
+  opacity: 1;
+  /* padding: 20px; */
+  /* margin-top: 10px; */
+}
+
+/* Dropdown Header */
+.dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+}
+
+.dropdown-title {
+  font-family: "Poppins", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.dropdown-icon {
+  font-size: 20px;
+}
+
+/* Farm List */
+.farm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+}
+
+.farm-item {
+  /* padding: 12px 15px;
+  background: rgba(0, 0, 0, 0.04); */
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.farm-item:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(84, 84, 84, 0.15);
+  /* transform: translateX(3px); */
+}
+
+.farm-item span {
+  font-family: "Poppins", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #616161;
+}
+
+/* Add Farm Button */
+.add-farm-btn {
+  width: 100%;
+  /* padding: 12px; */
+  background: rgba(174, 173, 173, 0.08);
+  color: #333;
+  border: none;
+  border-radius: 12px;
+  font-family: "Poppins", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.add-farm-btn:hover {
+  background: rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.add-farm-btn:active {
+  transform: translateY(0);
+}
+
+/* Empty State */
+.empty-farms {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+}
+
+/* Custom Scrollbar for Farm List */
+.farm-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.farm-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+.farm-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.farm-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.farm-item.selected {
+  background-color: #f0f0f0;
+  font-weight: bold;
+  border-left: 4px solid #007bff;  /* Highlight with a left border */
+}
+
+/* ===================
+   DEVELOPER CONTROLS
+   =================== */
+
+.dev-controls {
+  margin-top: 15px;
+  padding: 15px;
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.15) 0%, rgba(41, 128, 185, 0.2) 100%);
+  border-radius: 12px;
+  border: 2px solid rgba(52, 152, 219, 0.3);
+  box-shadow:
+    0 4px 12px rgba(52, 152, 219, 0.15),
+    inset 0 1px 3px rgba(255, 255, 255, 0.1);
+}
+
+.dev-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(52, 152, 219, 0.25);
+}
+
+.dev-icon {
+  width: 18px;
+  height: 18px;
+  color: #3498db;
+  stroke-width: 2;
+  flex-shrink: 0;
+}
+
+.dev-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2c3e50;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dev-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dev-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(52, 152, 219, 0.3);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2980b9;
+  width: 100%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.dev-btn svg {
+  width: 20px;
+  height: 20px;
+  color: #3498db;
+  stroke-width: 2;
+  flex-shrink: 0;
+}
+
+.dev-btn:hover {
+  background: rgba(52, 152, 219, 0.15);
+  border-color: #3498db;
+  transform: translateX(3px);
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2);
+}
+
+.dev-btn:active {
+  transform: translateX(1px);
+  background: rgba(52, 152, 219, 0.25);
+  box-shadow: 0 2px 6px rgba(52, 152, 219, 0.15);
+}
+
+@media (max-width: 768px) {
+  .dev-controls {
+    margin-top: 12px;
+    padding: 12px;
+  }
+
+  .dev-header {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+  }
+
+  .dev-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .dev-title {
+    font-size: 12px;
+  }
+
+  .dev-buttons {
+    gap: 8px;
+  }
+
+  .dev-btn {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .dev-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+}

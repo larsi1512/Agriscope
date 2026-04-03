@@ -1,0 +1,14 @@
+openmeteo_requests
+requests
+requests-cache
+retry-requests
+pandas
+pika>=1.3.2
+schedule
+pymongo
+tenacity
+urllib3
+pytest
+pytest-mock
+pytest-cov
+

@@ -1,0 +1,630 @@
+# Combined Backend Pod - contains all services, databases, and message brokers
+# NOTE: Create the mail-credentials secret manually before deploying:
+# kubectl create secret generic mail-credentials \
+#   --namespace=25ws-ase-pr-inso-01 \
+#   --from-literal=SPRING_MAIL_USERNAME=<email> \
+#   --from-literal=SPRING_MAIL_PASSWORD=<password>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: seeds-data
+  namespace: 25ws-ase-pr-inso-01
+data:
+  seeds.json: |
+    [
+      {
+        "seedType": "WHEAT",
+        "displayName": "Wheat",
+        "daysToYoung": 30,
+        "daysToMature": 70,
+        "daysToReady": 110,
+        "scientificName": "Triticum aestivum",
+        "minTemperature": 3.0,
+        "maxTemperature": 30.0,
+        "waterRequirement": 5.0,
+        "heatStressTemperature": 30.0,
+        "heavyRainThreshold": 10.0,
+        "seedCoefficient": 1.15,
+        "minSoilMoisture": 0.25,
+        "allowedWaterDeficit": 5.0,
+        "diseaseRiskMinTemp": 15.0,
+        "diseaseRiskMaxTemp": 30.0,
+        "diseaseRainThreshold": 5.0,
+        "maxWindTolerance": 25.0,
+        "ruleParams": {
+          "delay_deficit_factor": 0.9,
+          "urgent_deficit_factor": 1.0,
+          "urgent_moisture_factor": 1.0,
+          "soon_deficit_min": 0.7,
+          "soon_deficit_max": 1.0,
+          "soon_moisture_min": 0.8,
+          "soon_moisture_max": 1.0,
+          "normal_deficit_limit": 0.7,
+          "disease_rain_factor": 1.0,
+          "disease_temp_offset": 0.0
+        }
+      },
+      {
+        "seedType": "CORN",
+        "daysToYoung": 25,
+        "daysToMature": 60,
+        "daysToReady": 100,
+        "displayName": "Corn",
+        "scientificName": "Zea mays",
+        "minTemperature": 2.0,
+        "maxTemperature": 35.0,
+        "waterRequirement": 8.0,
+        "heatStressTemperature": 35.0,
+        "heavyRainThreshold": 15.0,
+        "seedCoefficient": 1.2,
+        "minSoilMoisture": 0.35,
+        "allowedWaterDeficit": 2.5,
+        "diseaseRiskMinTemp": 18.0,
+        "diseaseRiskMaxTemp": 32.0,
+        "diseaseRainThreshold": 10.0,
+        "maxWindTolerance": 30.0,
+        "ruleParams": {
+          "delay_deficit_factor": 0.8,
+          "urgent_deficit_factor": 0.9,
+          "urgent_moisture_factor": 1.1,
+          "soon_deficit_min": 0.6,
+          "soon_deficit_max": 0.9,
+          "soon_moisture_min": 0.9,
+          "soon_moisture_max": 1.1,
+          "normal_deficit_limit": 0.6,
+          "disease_rain_factor": 1.0,
+          "disease_temp_offset": 0.0,
+          "wind_safety_factor": 1.0
+        }
+      },
+      {
+        "seedType": "BARLEY",
+        "displayName": "Barley",
+        "daysToYoung": 25,
+        "daysToMature": 60,
+        "daysToReady": 90,
+        "scientificName": "Hordeum vulgare",
+        "minTemperature": 2.0,
+        "maxTemperature": 28.0,
+        "waterRequirement": 4.5,
+        "heatStressTemperature": 28.0,
+        "heavyRainThreshold": 12.0,
+        "seedCoefficient": 1.15,
+        "minSoilMoisture": 0.28,
+        "allowedWaterDeficit": 4.0,
+        "diseaseRiskMinTemp": 10.0,
+        "diseaseRiskMaxTemp": 22.0,
+        "diseaseRainThreshold": 5.0,
+        "maxWindTolerance": 20.0,
+        "ruleParams": {
+          "delay_deficit_factor": 0.9,
+          "urgent_deficit_factor": 1.0,
+          "urgent_moisture_factor": 1.0,
+          "soon_deficit_min": 0.7,
+          "soon_deficit_max": 1.0,
+          "soon_moisture_min": 0.85,
+          "soon_moisture_max": 1.0,
+          "normal_deficit_limit": 0.7,
+          "lodging_rain_limit": 5.0,
+          "lodging_wind_factor": 0.8,
+          "disease_rain_limit": 2.0,
+          "disease_temp_offset": 0.0
+        }
+      },
+      {
+        "seedType": "PUMPKIN",
+        "displayName": "Pumpkin",
+        "daysToYoung": 20,
+        "daysToMature": 50,
+        "daysToReady": 90,
+        "scientificName": "Cucurbita pepo",
+        "minTemperature": 5.0,
+        "maxTemperature": 32.0,
+        "waterRequirement": 7.0,
+        "heatStressTemperature": 32.0,
+        "heavyRainThreshold": 20.0,
+        "seedCoefficient": 1.0,
+        "minSoilMoisture": 0.3,
+        "allowedWaterDeficit": 3.0,
+        "diseaseRiskMinTemp": 20.0,
+        "diseaseRiskMaxTemp": 30.0,
+        "diseaseRainThreshold": 3.0,
+        "maxWindTolerance": 35.0,
+        "ruleParams": {
+          "delay_deficit_factor": 0.6,
+          "urgent_deficit_factor": 0.8,
+          "urgent_moisture_factor": 1.1,
+          "soon_deficit_min": 0.5,
+          "soon_deficit_max": 0.8,
+          "soon_moisture_min": 0.9,
+          "soon_moisture_max": 1.1,
+          "normal_deficit_limit": 0.5,
+          "disease_rain_factor": 1.0,
+          "disease_temp_offset": 0.0,
+          "disease_dry_rain_limit": 2.0
+        }
+      },
+      {
+        "seedType": "BLACK_GRAPES",
+        "displayName": "Black Grapes",
+        "daysToYoung": 45,
+        "daysToMature": 90,
+        "daysToReady": 135,
+        "scientificName": "Vitis vinifera",
+        "minTemperature": 2.0,
+        "maxTemperature": 35.0,
+        "waterRequirement": 6.0,
+        "heatStressTemperature": 35.0,
+        "heavyRainThreshold": 15.0,
+        "seedCoefficient": 0.75,
+        "minSoilMoisture": 0.22,
+        "allowedWaterDeficit": 6.0,
+        "diseaseRiskMinTemp": 18.0,
+        "diseaseRiskMaxTemp": 30.0,
+        "diseaseRainThreshold": 3.0,
+        "maxWindTolerance": 40.0,
+        "ruleParams": {
+          "delay_deficit_factor": 1.1,
+          "urgent_deficit_factor": 1.2,
+          "urgent_moisture_factor": 0.7,
+          "soon_deficit_min": 0.8,
+          "soon_deficit_max": 1.2,
+          "soon_moisture_min": 0.6,
+          "soon_moisture_max": 0.8,
+          "normal_deficit_limit": 0.75,
+          "disease_rain_factor": 1.0,
+          "disease_temp_offset": 0.0,
+          "heat_stress_offset": 0.0,
+          "pest_temp_offset": 0.0,
+          "pest_dry_rain_limit": 2.0
+        }
+      },
+      {
+        "seedType": "WHITE_GRAPES",
+        "displayName": "White Grapes",
+        "daysToYoung": 45,
+        "daysToMature": 90,
+        "daysToReady": 135,
+        "scientificName": "Vitis vinifera",
+        "minTemperature": 1.0,
+        "maxTemperature": 32.0,
+        "waterRequirement": 5.5,
+        "heatStressTemperature": 32.0,
+        "heavyRainThreshold": 15.0,
+        "seedCoefficient": 0.7,
+        "minSoilMoisture": 0.25,
+        "allowedWaterDeficit": 5.5,
+        "diseaseRiskMinTemp": 10.0,
+        "diseaseRiskMaxTemp": 28.0,
+        "diseaseRainThreshold": 8.0,
+        "maxWindTolerance": 40.0,
+        "ruleParams": {
+          "delay_deficit_factor": 1.1,
+          "urgent_deficit_factor": 1.3,
+          "urgent_moisture_factor": 0.65,
+          "soon_deficit_min": 0.75,
+          "soon_deficit_max": 1.3,
+          "soon_moisture_min": 0.55,
+          "soon_moisture_max": 0.75,
+          "normal_deficit_limit": 0.75,
+          "disease_rain_factor": 1.0,
+          "disease_temp_offset": 0.0,
+          "pest_temp_offset": 0.0
+        }
+      }
+    ]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-services
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: backend-services
+  template:
+    metadata:
+      labels:
+        app: backend-services
+    spec:
+      volumes:
+        - name: seeds-config
+          configMap:
+            name: seeds-data
+            defaultMode: 0755
+        - name: users-db-data
+          emptyDir: {}
+        - name: farms-db-data
+          emptyDir: {}
+        - name: seeds-db-data
+          emptyDir: {}
+        - name: notifications-db-data
+          emptyDir: {}
+        - name: rabbitmq-data
+          emptyDir: {}
+
+      containers:
+        # ==================== DATABASES ====================
+        
+        # Users MongoDB - port 27017
+        - name: users-db
+          image: mongo:6
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: users-db-data
+              mountPath: /data/db
+          resources:
+            requests:
+              cpu: "15m"
+              memory: "96Mi"
+            limits:
+              cpu: "40m"
+              memory: "192Mi"
+
+        # Farms MongoDB - port 27018 (with init script for seeding)
+        - name: farms-db
+          image: mongo:6
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              mongod --port 27018 &
+              MONGO_PID=$!
+              # Wait for MongoDB to be ready using lightweight TCP check (max 60 seconds)
+              for i in $(seq 1 30); do
+                if (echo > /dev/tcp/127.0.0.1/27018) 2>/dev/null; then
+                  echo "MongoDB port is open"
+                  sleep 2
+                  break
+                fi
+                echo "Waiting for MongoDB... ($i)"
+                sleep 2
+              done
+              mongoimport --port 27018 --db farmsdb --collection seed --type json --file /seeds/seeds.json --jsonArray --drop
+              echo "Seeds imported to farmsdb"
+              wait $MONGO_PID
+          ports:
+            - containerPort: 27018
+          volumeMounts:
+            - name: farms-db-data
+              mountPath: /data/db
+            - name: seeds-config
+              mountPath: /seeds/seeds.json
+              subPath: seeds.json
+          resources:
+            requests:
+              cpu: "15m"
+              memory: "96Mi"
+            limits:
+              cpu: "40m"
+              memory: "192Mi"
+
+        # Seeds MongoDB - port 27019 (with init script for seeding)
+        - name: seeds-db
+          image: mongo:6
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              mongod --port 27019 &
+              MONGO_PID=$!
+              # Wait for MongoDB to be ready using lightweight TCP check (max 60 seconds)
+              for i in $(seq 1 30); do
+                if (echo > /dev/tcp/127.0.0.1/27019) 2>/dev/null; then
+                  echo "MongoDB port is open"
+                  sleep 2
+                  break
+                fi
+                echo "Waiting for MongoDB... ($i)"
+                sleep 2
+              done
+              mongoimport --port 27019 --db seedsdb --collection seed --type json --file /seeds/seeds.json --jsonArray --drop
+              echo "Seeds imported to seedsdb"
+              wait $MONGO_PID
+          ports:
+            - containerPort: 27019
+          volumeMounts:
+            - name: seeds-db-data
+              mountPath: /data/db
+            - name: seeds-config
+              mountPath: /seeds/seeds.json
+              subPath: seeds.json
+          resources:
+            requests:
+              cpu: "15m"
+              memory: "96Mi"
+            limits:
+              cpu: "40m"
+              memory: "192Mi"
+
+        # Notifications MongoDB - port 27020
+        - name: notifications-db
+          image: mongo:6
+          args: ["--port", "27020"]
+          ports:
+            - containerPort: 27020
+          volumeMounts:
+            - name: notifications-db-data
+              mountPath: /data/db
+          resources:
+            requests:
+              cpu: "15m"
+              memory: "96Mi"
+            limits:
+              cpu: "40m"
+              memory: "192Mi"
+
+        # ==================== MESSAGE BROKER ====================
+        
+        # RabbitMQ - ports 5672, 15672
+        - name: rabbitmq
+          image: rabbitmq:3-management
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: "guest"
+            - name: RABBITMQ_DEFAULT_PASS
+              value: "guest"
+          volumeMounts:
+            - name: rabbitmq-data
+              mountPath: /var/lib/rabbitmq
+          resources:
+            requests:
+              cpu: "25m"
+              memory: "192Mi"
+            limits:
+              cpu: "80m"
+              memory: "384Mi"
+
+        # Redis - port 6379
+        - name: redis
+          image: registry.reset.inso-w.at/pub/docker/redis:8
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "48Mi"
+            limits:
+              cpu: "30m"
+              memory: "96Mi"
+
+        # ==================== APPLICATION SERVICES ====================
+        
+        # User Service - port 8081
+        - name: user-service
+          image: registry.reset.inso-w.at/2025ws-ase-pr-group/25ws-ase-pr-inso-01/user-service:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SERVER_PORT
+              value: "8081"
+            - name: SPRING_PROFILES_ACTIVE
+              value: "kubernetes"
+            - name: SPRING_DATA_MONGODB_URI
+              value: "mongodb://localhost:27017/usersdb"
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://s-service-registry:8761/eureka/"
+            - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+              value: "true"
+            - name: SPRING_RABBITMQ_HOST
+              value: "localhost"
+            - name: SPRING_RABBITMQ_PORT
+              value: "5672"
+            - name: FRONTEND_URL
+              value: "https://25ws-ase-pr-inso-01.apps.student.inso-w.at"
+          resources:
+            requests:
+              cpu: "30m"
+              memory: "200Mi"
+            limits:
+              cpu: "100m"
+              memory: "300Mi"
+
+        # Farm Service - port 8082
+        - name: farm-service
+          image: registry.reset.inso-w.at/2025ws-ase-pr-group/25ws-ase-pr-inso-01/farm-service:latest
+          ports:
+            - containerPort: 8082
+          env:
+            - name: SERVER_PORT
+              value: "8082"
+            - name: SPRING_PROFILES_ACTIVE
+              value: "kubernetes"
+            - name: SPRING_DATA_MONGODB_URI
+              value: "mongodb://localhost:27018/farmsdb"
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://s-service-registry:8761/eureka/"
+            - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+              value: "true"
+            - name: SPRING_RABBITMQ_HOST
+              value: "localhost"
+            - name: SPRING_RABBITMQ_PORT
+              value: "5672"
+            - name: API_GATEWAY_URL
+              value: "http://s-api-gateway:8080"
+            - name: CORS_ALLOWED_ORIGINS
+              value: "http://localhost:4200,https://25ws-ase-pr-inso-01.apps.student.inso-w.at"
+          resources:
+            requests:
+              cpu: "30m"
+              memory: "200Mi"
+            limits:
+              cpu: "100m"
+              memory: "300Mi"
+        
+        # Rule Engine - port 8084
+        - name: rule-engine
+          image: registry.reset.inso-w.at/2025ws-ase-pr-group/25ws-ase-pr-inso-01/rule-engine:latest
+          ports:
+            - containerPort: 8084
+          env:
+            - name: SERVER_PORT
+              value: "8084"
+            - name: SPRING_PROFILES_ACTIVE
+              value: "kubernetes"
+            - name: SPRING_DATA_MONGODB_URI
+              value: "mongodb://localhost:27019/seedsdb"
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://s-service-registry:8761/eureka/"
+            - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+              value: "true"
+            - name: SPRING_RABBITMQ_HOST
+              value: "localhost"
+            - name: SPRING_RABBITMQ_PORT
+              value: "5672"
+            - name: FARM_SERVICE_URL
+              value: "http://s-api-gateway:8080/api/farms"
+          resources:
+            requests:
+              cpu: "30m"
+              memory: "200Mi"
+            limits:
+              cpu: "100m"
+              memory: "300Mi"
+      
+        # Notification Service - port 8085
+        - name: notification-service
+          image: registry.reset.inso-w.at/2025ws-ase-pr-group/25ws-ase-pr-inso-01/notification-service:latest
+          ports:
+            - containerPort: 8085
+          env:
+            - name: SERVER_PORT
+              value: "8085"
+            - name: SPRING_PROFILES_ACTIVE
+              value: "kubernetes"
+            - name: SPRING_DATA_MONGODB_URI
+              value: "mongodb://localhost:27020/notificationsdb"
+            - name: SPRING_DATA_MONGODB_AUTO_INDEX_CREATION
+              value: "true"
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://s-service-registry:8761/eureka/"
+            - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+              value: "true"
+            - name: SPRING_RABBITMQ_HOST
+              value: "localhost"
+            - name: SPRING_RABBITMQ_PORT
+              value: "5672"
+            - name: SPRING_DATA_REDIS_HOST
+              value: "localhost"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: SPRING_MAIL_HOST
+              value: "smtp.gmail.com"
+            - name: SPRING_MAIL_PORT
+              value: "587"
+            - name: SPRING_MAIL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mail-credentials
+                  key: SPRING_MAIL_USERNAME
+            - name: SPRING_MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mail-credentials
+                  key: SPRING_MAIL_PASSWORD
+            - name: SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH
+              value: "true"
+            - name: SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE
+              value: "true"
+            - name: CORS_ALLOWED_ORIGINS
+              value: "http://localhost:4200,https://25ws-ase-pr-inso-01.apps.student.inso-w.at"
+          resources:
+            requests:
+              cpu: "30m"
+              memory: "200Mi"
+            limits:
+              cpu: "100m"
+              memory: "300Mi"
+
+        # Sensor Ingestion Service (Python) - background worker
+        - name: sensor-ingestion-service
+          image: registry.reset.inso-w.at/2025ws-ase-pr-group/25ws-ase-pr-inso-01/sensor-ingestion-service:latest
+          env:
+            - name: ENVIRONMENT
+              value: "kubernetes"
+            - name: RABBITMQ_HOST
+              value: "localhost"
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: USERS_MONGO_URI
+              value: "mongodb://localhost:27017/usersdb"
+            - name: FARMS_MONGO_URI
+              value: "mongodb://localhost:27018/farmsdb"
+          resources:
+            requests:
+              cpu: "15m"
+              memory: "96Mi"
+            limits:
+              cpu: "70m"
+              memory: "192Mi"
+
+      imagePullSecrets:
+        - name: secret-dockercfg
+  revisionHistoryLimit: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s-user-service
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  type: ClusterIP
+  selector:
+    app: backend-services
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s-farm-service
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  type: ClusterIP
+  selector:
+    app: backend-services
+  ports:
+    - name: http
+      port: 8082
+      targetPort: 8082
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s-rule-engine
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  type: ClusterIP
+  selector:
+    app: backend-services
+  ports:
+    - name: http
+      port: 8084
+      targetPort: 8084
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s-notification-service
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  type: ClusterIP
+  selector:
+    app: backend-services
+  ports:
+    - name: http
+      port: 8085
+      targetPort: 8085
+      protocol: TCP

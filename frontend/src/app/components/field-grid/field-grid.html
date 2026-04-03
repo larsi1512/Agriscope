@@ -1,0 +1,316 @@
+<div *ngIf="devMode" class="dev-controls">
+  <h3> Developer Controls</h3>
+  <div class="dev-field-controls">
+    <div *ngFor="let field of fields" class="dev-field-item">
+      <strong>Field {{field.id}}:</strong>
+      <span class="status-badge">{{getFieldStatusDisplay(field.id)}}</span>
+      <div class="dev-buttons">
+        <button
+          class="dev-btn advance"
+          (click)="advanceGrowth(field.id)"
+          [disabled]="field.status === FieldStatus.empty || field.status === FieldStatus.ready">
+          Advance
+        </button>
+        <button
+          class="dev-btn reset"
+          (click)="resetField(field.id)"
+          [disabled]="field.status === FieldStatus.empty">
+          Reset
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ============================================
+     MAIN FARM CONTAINER
+     ============================================ -->
+<div class="farm-container">
+  <div class="fields-wrapper">
+
+    <!-- ============================================
+         FIRST ROW - Fields 1, 2, 3
+         ============================================ -->
+    <div class="fields-row">
+      <div
+        *ngFor="let field of fields.slice(0, 3)"
+        class="field"
+        [class.has-plus]="hasPlus(field.id)"
+        [class.planted]="isPlanted(field.id)"
+        [class.growing]="field.status === FieldStatus.growing"
+        [class.ready]="isReady(field.id)"
+        [class.clickable]="isPlanted(field.id)"
+        [attr.data-field]="field.id"
+        (click)="isPlanted(field.id) && openFieldDetailsModal(field.id)">
+
+        <!-- Ready Badge -->
+        <div *ngIf="isReady(field.id)" class="ready-badge">
+          <span>READY!</span>
+        </div>
+
+        <!-- Field Top Surface -->
+        <div class="field-top">
+          <!-- Soil texture/rows pattern -->
+          <div class="field-rows"></div>
+
+          <!-- Plus button (only shows on first empty field) -->
+          <div
+            *ngIf="hasPlus(field.id)"
+            class="plus-button"
+            (click)="openAddSeedModal(field.id); $event.stopPropagation()">
+            <span>+</span>
+          </div>
+
+          <!-- Plants grid (only shows on planted fields) -->
+          <div *ngIf="isPlanted(field.id)" class="plants-container">
+            <div class="plant-item" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]">
+              <img [src]="getPlantIcon(field.id)" alt="Plant" class="plant-icon" />
+            </div>
+          </div>
+        </div>
+
+        <div class="field-bottom-side"></div>
+        <div class="field-right-side"></div>
+      </div>
+    </div>
+
+    <!-- ============================================
+         SECOND ROW - Fields 4, 5, 6
+         ============================================ -->
+    <div class="fields-row">
+      <div
+        *ngFor="let field of fields.slice(3, 6)"
+        class="field"
+        [class.has-plus]="hasPlus(field.id)"
+        [class.planted]="isPlanted(field.id)"
+        [class.ready]="isReady(field.id)"
+        [class.clickable]="isPlanted(field.id)"
+        [class.growing]="field.status === FieldStatus.growing"
+        [attr.data-field]="field.id"
+        (click)="isPlanted(field.id) && openFieldDetailsModal(field.id)">
+
+        <!-- Ready Badge -->
+        <div *ngIf="isReady(field.id)" class="ready-badge">
+          <span>READY!</span>
+        </div>
+
+        <!-- Field Top Surface -->
+        <div class="field-top">
+          <!-- Soil texture/rows pattern -->
+          <div class="field-rows"></div>
+
+          <!-- Plus button (only shows on first empty field) -->
+          <div
+            *ngIf="hasPlus(field.id)"
+            class="plus-button"
+            (click)="openAddSeedModal(field.id); $event.stopPropagation()">
+            <span>+</span>
+          </div>
+
+          <!-- Plants grid (only shows on planted fields) -->
+          <div *ngIf="isPlanted(field.id)" class="plants-container">
+            <div class="plant-item" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]">
+              <img [src]="getPlantIcon(field.id)" alt="Plant" class="plant-icon" />
+            </div>
+          </div>
+        </div>
+
+        <div class="field-bottom-side"></div>
+        <div class="field-right-side"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     ADD SEED MODAL
+     ============================================ -->
+<div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h2>Add new field</h2>
+
+    <!-- Seed Selection Section -->
+    <div class="seed-selection">
+      <p class="seed-label">Choose a seed type:</p>
+
+      <!-- Seed Options Grid (3 columns) -->
+      <div class="seed-grid">
+        <!-- Wheat -->
+        <div
+          class="seed-option"
+          [class.selected]="selectedSeedType === SeedType.wheat"
+          (click)="selectSeedType(SeedType.wheat)">
+          <img src="assets/icons/wheat.svg" alt="Wheat" />
+          <span>Wheat</span>
+        </div>
+
+        <!-- Corn -->
+        <div
+          class="seed-option"
+          [class.selected]="selectedSeedType === SeedType.corn"
+          (click)="selectSeedType(SeedType.corn)">
+          <img src="assets/icons/corn.svg" alt="Corn" />
+          <span>Corn</span>
+        </div>
+
+        <!-- Barley -->
+        <div
+          class="seed-option"
+          [class.selected]="selectedSeedType === SeedType.barley"
+          (click)="selectSeedType(SeedType.barley)">
+          <img src="assets/icons/barely.svg" alt="Barley" />
+          <span>Barley</span>
+        </div>
+
+        <!-- White Grape -->
+        <div
+          class="seed-option"
+          [class.selected]="selectedSeedType === SeedType.whiteGrapes"
+          (click)="selectSeedType(SeedType.whiteGrapes)">
+          <img src="assets/icons/white_grape.svg" alt="White Grapes" />
+          <span>White Grapes</span>
+        </div>
+
+        <!-- Red Grape -->
+        <div
+          class="seed-option"
+          [class.selected]="selectedSeedType === SeedType.blackGrapes"
+          (click)="selectSeedType(SeedType.blackGrapes)">
+          <img src="assets/icons/grape.svg" alt="Black Grapes" />
+          <span>Black Grapes</span>
+        </div>
+
+        <!-- Pumpkin -->
+        <div
+          class="seed-option"
+          [class.selected]="selectedSeedType === SeedType.pumpkin"
+          (click)="selectSeedType(SeedType.pumpkin)">
+          <img src="assets/icons/pumpkin.svg" alt="Pumpkin" />
+          <span>Pumpkin</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sowing Date Section -->
+    <div class="date-section">
+      <p class="date-label">Date of the sowing</p>
+      <input
+        type="date"
+        class="date-input"
+        [(ngModel)]="sowingDate"
+        placeholder="dd/mm/yyyy" />
+    </div>
+
+    <!-- Modal Action Buttons -->
+    <div class="modal-buttons">
+      <button class="add-button" (click)="addSeedConfirm()">Add field</button>
+      <button class="cancel-button" (click)="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     FIELD DETAILS MODAL
+     ============================================ -->
+<div class="modal-overlay" *ngIf="isDetailsModalOpen" (click)="closeDetailsModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h2>Field Details</h2>
+
+    <!-- Field Information Display -->
+    <div class="details-content" *ngIf="getSelectedField() as field">
+
+      <!-- Field ID -->
+      <div class="detail-row">
+        <span class="detail-label">Field Number:</span>
+        <span class="detail-value">{{ field.id }}</span>
+      </div>
+
+      <!-- Crop/Seed Type -->
+      <div class="detail-row">
+        <span class="detail-label">Crop Type:</span>
+        <span class="detail-value">{{ field.seedType || 'N/A' }}</span>
+      </div>
+
+      <!-- Planting Date -->
+      <div class="detail-row">
+        <span class="detail-label">Planted Date:</span>
+        <span class="detail-value">{{ formatDate(field.plantedDate) }}</span>
+      </div>
+
+      <!-- Growth Stage -->
+      <div class="detail-row">
+        <span class="detail-label">Growth Stage:</span>
+        <span class="detail-value">{{ field.growthStage || 'N/A' }}</span>
+      </div>
+
+      <!-- Status -->
+      <div class="detail-row">
+        <span class="detail-label">Status:</span>
+        <span class="detail-value">{{ field.status }}</span>
+      </div>
+    </div>
+
+    <!-- Close Button -->
+    <div class="modal-buttons">
+      <button class="cancel-button" (click)="closeDetailsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     HARVEST MODAL
+     ============================================ -->
+<div class="modal-overlay harvest-overlay" *ngIf="isHarvestModalOpen" (click)="closeHarvestModal()">
+  <div class="modal-content harvest-modal" (click)="$event.stopPropagation()">
+    <div class="harvest-header">
+      <svg class="harvest-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <h2>Harvest Field</h2>
+    </div>
+
+    <!-- Field Information -->
+    <div class="harvest-content" *ngIf="getSelectedField() as field">
+
+      <div class="harvest-info">
+        <div class="detail-row">
+          <span class="detail-label">Crop:</span>
+          <span class="detail-value">{{ field.seedType }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Planted:</span>
+          <span class="detail-value">{{ formatDate(field.plantedDate) }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Status:</span>
+          <span class="detail-value status-ready">Ready to Harvest ✓</span>
+        </div>
+      </div>
+
+      <!-- Harvest Date Section -->
+      <div class="date-section">
+        <p class="date-label">Harvest Date</p>
+        <input
+          type="date"
+          class="date-input"
+          [(ngModel)]="harvestDate"
+          [min]="formatDate(field.plantedDate)"
+          placeholder="dd/mm/yyyy" />
+      </div>
+
+      <div class="harvest-warning">
+        <p>⚠️ This action will reset the field. All data will be cleared.</p>
+      </div>
+    </div>
+
+    <!-- Modal Action Buttons -->
+    <div class="modal-buttons">
+      <button class="cancel-button" (click)="closeHarvestModal()">Cancel</button>
+      <button class="harvest-button" (click)="harvestField()">
+        🌾 Harvest Field
+      </button>
+    </div>
+  </div>
+</div>

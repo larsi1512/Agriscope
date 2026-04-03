@@ -1,0 +1,143 @@
+<div class="page-container">
+  <app-topbar [showFarmTitle]="true" [farmName]="currentFarmName"></app-topbar>
+
+  <div class="body-container">
+    <app-sidebar class="sidebar"></app-sidebar>
+
+    <div class="content-area">
+      <div class="statistics-container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+          <h1 class="page-title">Farm Statistics & Analytics</h1>
+          <p class="page-subtitle">Monitor your farm's performance and optimization insights</p>
+        </div>
+
+        <!-- No Farm Selected Message -->
+        <div class="empty-state" *ngIf="!currentFarmId">
+          <div class="empty-state-content">
+            <div class="empty-icon">
+              <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2C10.9 2 10 2.9 10 4V5H7C5.9 5 5 5.9 5 7V19C5 20.1 5.9 21 7 21H17C18.1 21 19 20.1 19 19V7C19 5.9 18.1 5 17 5H14V4C14 2.9 13.1 2 12 2Z" fill="#8B6F47"/>
+              </svg>
+            </div>
+            <h2 class="empty-title">No Farm Selected</h2>
+            <p class="empty-message">
+              Please select a farm from the sidebar to view statistics
+            </p>
+          </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="charts-grid" *ngIf="currentFarmId">
+
+          <!-- Chart 1: Feedback Stats -->
+          <div class="chart-card">
+            <h3 class="chart-title">Prediction Accuracy (User Feedback)</h3>
+
+            <div class="chart-wrapper">
+              <ng-container *ngIf="hasFeedbackData(); else noFeedback">
+                <canvas
+                  baseChart
+                  [data]="feedbackChartData"
+                  [options]="feedbackChartOptions"
+                  [type]="feedbackChartType">
+                </canvas>
+              </ng-container>
+
+              <ng-template #noFeedback>
+                <div class="chart-empty">
+                  <div class="chart-empty-title">No feedback yet</div>
+                  <div class="chart-empty-text">
+                    User feedback will appear once predictions are evaluated.
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+
+
+          <!-- Chart 2: Alert Distribution -->
+          <div class="chart-card">
+            <h3 class="chart-title">System Alerts by Recommendation Type</h3>
+
+            <div class="chart-wrapper">
+              <ng-container *ngIf="hasAlertData(); else noAlerts">
+                <canvas
+                  baseChart
+                  [data]="alertChartData"
+                  [options]="alertChartOptions"
+                  [type]="alertChartType">
+                </canvas>
+              </ng-container>
+
+              <ng-template #noAlerts>
+                <div class="chart-empty">
+                  <div class="chart-empty-title">No alerts generated</div>
+                  <div class="chart-empty-text">
+                    The system has not issued any recommendations yet.
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+
+          <!-- Chart 3: Crop Vulnerability -->
+          <div class="chart-card">
+            <h3 class="chart-title">Crop Vulnerability Overview</h3>
+
+            <div class="chart-wrapper">
+              <ng-container *ngIf="hasCropData(); else noCrops">
+                <canvas
+                  baseChart
+                  [data]="cropChartData"
+                  [options]="cropChartOptions"
+                  [type]="cropChartType">
+                </canvas>
+              </ng-container>
+
+              <ng-template #noCrops>
+                <div class="chart-empty">
+                  <div class="chart-empty-title">No crops planted</div>
+                  <div class="chart-empty-text">
+                    Crop analytics will be available once crops are registered.
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+
+          <!-- Chart 4: Water Savings -->
+          <div class="chart-card">
+            <h3 class="chart-title">Water Savings Through Smart Irrigation</h3>
+
+            <div class="chart-wrapper">
+              <ng-container *ngIf="hasWaterData(); else noWater">
+                <canvas
+                  baseChart
+                  [data]="waterChartData"
+                  [options]="waterChartOptions"
+                  [type]="waterChartType">
+                </canvas>
+
+                <div class="center-text">
+                  <div class="center-value">{{ getWaterSavedPercentage() }}%</div>
+                  <div class="center-label">Water Saved</div>
+                </div>
+              </ng-container>
+
+              <ng-template #noWater>
+                <div class="chart-empty">
+                  <div class="chart-empty-title">No irrigation data</div>
+                  <div class="chart-empty-text">
+                    Water savings will appear after irrigation decisions are made.
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

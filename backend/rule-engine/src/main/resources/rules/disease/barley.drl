@@ -1,0 +1,63 @@
+package rules.disease;
+import com.agriscope.rule_engine.domain.model.DailyWeatherData;
+import com.agriscope.rule_engine.domain.model.Seed;
+import com.agriscope.rule_engine.domain.enums.SeedType;
+import com.agriscope.rule_engine.domain.model.Recommendation
+import com.agriscope.rule_engine.domain.enums.RecommendationType;
+import com.agriscope.rule_engine.domain.model.FieldStatus
+import com.agriscope.rule_engine.domain.enums.GrowthStage
+
+global java.util.List recommendations;
+
+rule "Barley - Lodging Risk (Rain + Wind) Dynamic"
+    when
+        $seed : Seed(seedType == SeedType.BARLEY)
+        $field : FieldStatus(seedType == SeedType.BARLEY, stage != GrowthStage.READY)
+        $rainLimit : Number() from $seed.getParam("lodging_rain_limit", 5.0)
+        $windLimit : Number() from $seed.maxWindTolerance * $seed.getParam("lodging_wind_factor", 0.8)
+
+        $day : DailyWeatherData(
+            rain_sum > $rainLimit.doubleValue(),
+            wind_speed_10m_max > $windLimit.doubleValue()
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setRecommendedSeed(SeedType.BARLEY);
+        rec.setRecommendationType(RecommendationType.PLANNING_ALERT);
+
+        rec.setAdvice("7-Day Forecast: Critical Lodging Risk on " + $day.getDate().toLocalDate());
+        rec.setReasoning("Forecast predicts rain (" + $day.getRain_sum() + "mm) > " + String.format("%.1f", $rainLimit) +
+                         "mm combined with wind (" + $day.getWind_speed_10m_max() + " km/h). High risk of flattening.");
+
+        rec.getMetrics().put("forecast_date", $day.getDate().toString());
+        rec.getMetrics().put("rain_predicted", $day.getRain_sum());
+        rec.getMetrics().put("wind_predicted", $day.getWind_speed_10m_max());
+
+        recommendations.add(rec);
+end
+
+rule "Barley - Disease Risk (Net Blotch) Dynamic"
+    when
+        $seed : Seed(seedType == SeedType.BARLEY)
+        $field : FieldStatus(seedType == SeedType.BARLEY, stage != GrowthStage.READY)
+        $rainThreshold : Number() from $seed.getParam("disease_rain_limit", 2.0)
+        $tempMaxLimit  : Number() from $seed.diseaseRiskMaxTemp + $seed.getParam("disease_temp_offset", 0.0)
+
+        $day : DailyWeatherData(
+            rain_sum > $rainThreshold.doubleValue(),
+            temperature_2m_max < $tempMaxLimit.doubleValue()
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setRecommendedSeed(SeedType.BARLEY);
+        rec.setRecommendationType(RecommendationType.DISEASE_PREVENTION);
+
+        rec.setAdvice("Disease Risk: Net Blotch");
+        rec.setReasoning("Cool (< " + String.format("%.1f", $tempMaxLimit) + "C) and wet (> " +
+                         String.format("%.1f", $rainThreshold) + "mm) conditions favor Net Blotch.");
+
+        rec.getMetrics().put("forecast_date", $day.getDate().toString());
+        rec.getMetrics().put("rain_predicted", $day.getRain_sum());
+        rec.getMetrics().put("temp_max_predicted", $day.getTemperature_2m_max());
+        recommendations.add(rec);
+end

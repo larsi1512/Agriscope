@@ -1,0 +1,82 @@
+<div class="sidebar-container">
+
+  <div class="sidebar-header">
+    <img [src]="profilePicture || 'assets/icons/no_profile_photo.svg'" class="avatar" alt="Profile Picture"/>
+    <div class="username">{{displayName}}</div>
+  </div>
+
+  <div class="menu">
+
+    <!-- Dropdown Menu -->
+    <div class="menu-item has-dropdown">
+      <div class="menu-item-content">
+        <img src="assets/icons/my_farms.svg" />
+        <span>My farms</span>
+      </div>
+
+      <div class="farms-dropdown">
+        <div class="farm-list">
+          <div
+            class="farm-item"
+            *ngFor="let farm of farms"
+            [class.selected]="farm === selectedFarm"
+            (click)="selectFarm(farm)"
+          >
+            <span>{{ farm.name }}</span>
+          </div>
+        </div>
+
+        <button class="add-farm-btn" (click)="addNewFarm()">
+          <span>+</span>
+          <span>Add New Farm</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="menu-item" (click)="goToFeedback()">
+      <img src="assets/icons/feedback.svg" />
+      <span>Feedback</span>
+    </div>
+
+    <div class="menu-item" (click)="gotoStatistic()">
+      <img src="assets/icons/stats.svg" />
+      <span>Statistic</span>
+    </div>
+
+    <div class="menu-item" (click)="gotoSeeds()">
+      <img src="assets/icons/seeds.svg" />
+      <span>Seeds</span>
+    </div>
+
+    <!-- ==================
+         DEVELOPER CONTROLS
+         =================== -->
+    <div class="dev-controls" *ngIf="showDevControls">
+      <div class="dev-header">
+        <svg class="dev-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+        </svg>
+        <span class="dev-title">Developer Controls</span>
+      </div>
+
+      <div class="dev-buttons">
+        <button class="dev-btn" (click)="onLogFarms()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span>Log Farms</span>
+        </button>
+
+        <button class="dev-btn" (click)="onLoadFarms()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          <span>Reload Farms</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

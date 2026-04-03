@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: registry.reset.inso-w.at/2025ws-ase-pr-group/25ws-ase-pr-inso-01/api-gateway:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://s-service-registry:8761/eureka/"
+            - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+              value: "true"
+            - name: SPRING_PROFILES_ACTIVE
+              value: "kubernetes"
+            - name: CORS_ALLOWED_ORIGINS
+              value: "http://localhost:4200,https://25ws-ase-pr-inso-01.apps.student.inso-w.at"
+          resources:
+            requests:
+              cpu: "40m"
+              memory: "192Mi"
+              ephemeral-storage: "50Mi"
+            limits:
+              cpu: "200m"
+              memory: "384Mi"
+              ephemeral-storage: "100Mi"
+      imagePullSecrets:
+        - name: secret-dockercfg
+  revisionHistoryLimit: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s-api-gateway
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  type: ClusterIP
+  selector:
+    app: api-gateway
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-gateway-ingress
+  namespace: 25ws-ase-pr-inso-01
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: "s-api-gateway"
+spec:
+  rules:
+    - host: "25ws-ase-pr-inso-01.apps.student.inso-w.at"
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: s-api-gateway
+                port:
+                  number: 8080
+          - path: /ws-alerts
+            pathType: Prefix
+            backend:
+              service:
+                name: s-api-gateway
+                port:
+                  number: 8080

@@ -1,0 +1,480 @@
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: 25ws-ase-pr-inso-01
+# ---
+# # -------------------------
+# # MONGO INIT (seeds + init scripts)
+# # These files will be mounted into the mongo container and run on first start
+# # when the data directory is empty.
+# # -------------------------
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: mongo-init
+#   namespace: 25ws-ase-pr-inso-01
+# data:
+#   seeds.json: |
+#     [ 
+#       { "seedType": "WHEAT", "displayName": "Wheat", "daysToYoung": 30, "daysToMature": 70, "daysToReady": 110,
+#         "scientificName": "Triticum aestivum", "minTemperature": 3.0, "maxTemperature": 30.0, "waterRequirement": 5.0,
+#         "heatStressTemperature": 30.0, "heavyRainThreshold": 10.0, "seedCoefficient": 1.15, "minSoilMoisture": 0.25,
+#         "allowedWaterDeficit": 5.0, "diseaseRiskMinTemp": 15.0, "diseaseRiskMaxTemp": 30.0, "diseaseRainThreshold": 5.0,
+#         "maxWindTolerance": 25.0,
+#         "ruleParams": { "delay_deficit_factor": 0.9, "urgent_deficit_factor": 1.0, "urgent_moisture_factor": 1.0,
+#           "soon_deficit_min": 0.7, "soon_deficit_max": 1.0, "soon_moisture_min": 0.8, "soon_moisture_max": 1.0,
+#           "normal_deficit_limit": 0.7, "disease_rain_factor": 1.0, "disease_temp_offset": 0.0
+#         }
+#       }
+#       # ... keep the rest of your JSON as-is ...
+#     ]
+#   init-mongo.sh: |
+#     #!/bin/bash
+#     set -e
+
+#     mongoimport --host localhost \
+#       --db seedsdb \
+#       --collection seed \
+#       --type json \
+#       --file /data/seeds.json \
+#       --jsonArray \
+#       --drop
+
+#   init-farms.sh: |
+#     #!/bin/bash
+#     set -e
+
+#     mongoimport --host localhost \
+#       --db farmsdb \
+#       --collection seed \
+#       --type json \
+#       --file /data/seeds.json \
+#       --jsonArray \
+#       --drop
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: mongo-data
+#   namespace: 25ws-ase-pr-inso-01
+# spec:
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 250Mi
+# ---
+# # -------------------------
+# # POD 4: MongoDB (single instance)
+# # -------------------------
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: mongo
+#   namespace: 25ws-ase-pr-inso-01
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: mongo
+#   template:
+#     metadata:
+#       labels:
+#         app: mongo
+#     spec:
+#       containers:
+#         - name: mongo
+#           image: mongo:7
+#           ports:
+#             - containerPort: 27017
+#           resources:
+#             requests:
+#               cpu: "50m"
+#               memory: "512Mi"
+#               ephemeral-storage: "100Mi"
+#             limits:
+#               cpu: "300m"
+#               memory: "1024Mi"
+#               ephemeral-storage: "300Mi"
+#           volumeMounts:
+#             - name: mongo-data
+#               mountPath: /data/db
+#             # Mongo official image runs scripts in /docker-entrypoint-initdb.d at first startup
+#             - name: mongo-init
+#               mountPath: /docker-entrypoint-initdb.d
+#             - name: mongo-seeds
+#               mountPath: /data/seeds.json
+#               subPath: seeds.json
+#       volumes:
+#         - name: mongo-data
+#           persistentVolumeClaim:
+#             claimName: mongo-data
+#         - name: mongo-init
+#           configMap:
+#             name: mongo-init
+#             defaultMode: 0755
+#         - name: mongo-seeds
+#           configMap:
+#             name: mongo-init
+#             items:
+#               - key: seeds.json
+#                 path: seeds.json
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: s-mongo
+#   namespace: 25ws-ase-pr-inso-01
+# spec:
+#   type: ClusterIP
+#   selector:
+#     app: mongo
+#   ports:
+#     - name: mongo
+#       port: 27017
+#       targetPort: 27017
+#       protocol: TCP
+
+# ---
+# # -------------------------
+# # POD 3: RabbitMQ + Redis
+# # -------------------------
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: messaging
+#   namespace: 25ws-ase-pr-inso-01
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: messaging
+#   template:
+#     metadata:
+#       labels:
+#         app: messaging
+#     spec:
+#       containers:
+#         - name: rabbitmq
+#           image: rabbitmq:3-management
+#           ports:
+#             - containerPort: 5672
+#             - containerPort: 15672
+#           resources:
+#             requests:
+#               cpu: "100m"
+#               memory: "512Mi"
+#               ephemeral-storage: "100Mi"
+#             limits:
+#               cpu: "400m"
+#               memory: "1024Mi"
+#               ephemeral-storage: "300Mi"
+#           readinessProbe:
+#             tcpSocket:
+#               port: 5672
+#             initialDelaySeconds: 10
+#             periodSeconds: 5
+#           livenessProbe:
+#             tcpSocket:
+#               port: 5672
+#             initialDelaySeconds: 20
+#             periodSeconds: 10
+
+#         - name: redis
+#           image: redis:7-alpine
+#           ports:
+#             - containerPort: 6379
+#           resources:
+#             requests:
+#               cpu: "25m"
+#               memory: "128Mi"
+#               ephemeral-storage: "50Mi"
+#             limits:
+#               cpu: "150m"
+#               memory: "256Mi"
+#               ephemeral-storage: "150Mi"
+#           readinessProbe:
+#             tcpSocket:
+#               port: 6379
+#             initialDelaySeconds: 5
+#             periodSeconds: 5
+#           livenessProbe:
+#             tcpSocket:
+#               port: 6379
+#             initialDelaySeconds: 15
+#             periodSeconds: 10
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: s-messaging
+#   namespace: 25ws-ase-pr-inso-01
+# spec:
+#   type: ClusterIP
+#   selector:
+#     app: messaging
+#   ports:
+#     - name: amqp
+#       port: 5672
+#       targetPort: 5672
+#       protocol: TCP
+#     - name: rabbit-ui
+#       port: 15672
+#       targetPort: 15672
+#       protocol: TCP
+#     - name: redis
+#       port: 6379
+#       targetPort: 6379
+#       protocol: TCP
+
+# ---
+# -------------------------
+# POD 1: Core bundle (Gateway + Eureka + User + Farm)
+# Uses localhost Eureka because they are in the same Pod
+# -------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bundle-core
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bundle-core
+  template:
+    metadata:
+      labels:
+        app: bundle-core
+    spec:
+      containers:
+        - name: service-registry
+          image: registry.reset.inso-w.at/2025ws-ase-pr-group/service-registry:latest
+          env:
+            - name: SERVER_PORT
+              value: "8761"
+            - name: eureka.client.registerWithEureka
+              value: "false"
+            - name: eureka.client.fetchRegistry
+              value: "false"
+            - name: eureka.client.serviceUrl.defaultZone
+              value: "http://localhost:8761/eureka/"
+          ports:
+            - containerPort: 8761
+          resources:
+            requests: { cpu: "25m", memory: "256Mi", ephemeral-storage: "100Mi" }
+            limits:   { cpu: "250m", memory: "512Mi", ephemeral-storage: "200Mi" }
+
+        # - name: user-service
+        #   image: registry.reset.inso-w.at/2025ws-ase-pr-group/user-service:latest
+        #   env:
+        #     - name: SERVER_PORT
+        #       value: "8081"
+        #     - name: spring.profiles.active
+        #       value: "prod"
+        #     - name: spring.data.mongodb.uri
+        #       value: "mongodb://s-mongo:27017/usersdb"
+        #     - name: eureka.client.serviceUrl.defaultZone
+        #       value: "http://localhost:8761/eureka/"
+        #     - name: RABBITMQ_HOST
+        #       value: "s-messaging"
+        #     - name: RABBITMQ_PORT
+        #       value: "5672"
+        #     - name: spring.rabbitmq.host
+        #       value: "s-messaging"
+        #     - name: spring.rabbitmq.port
+        #       value: "5672"
+        #   ports:
+        #     - containerPort: 8081
+        #   resources:
+        #     requests: { cpu: "50m", memory: "256Mi", ephemeral-storage: "100Mi" }
+        #     limits:   { cpu: "400m", memory: "768Mi", ephemeral-storage: "200Mi" }
+
+        # - name: farm-service
+        #   image: registry.reset.inso-w.at/2025ws-ase-pr-group/farm-service:latest
+        #   env:
+        #     - name: SERVER_PORT
+        #       value: "8082"
+        #     - name: spring.profiles.active
+        #       value: "prod"
+        #     - name: spring.data.mongodb.uri
+        #       value: "mongodb://s-mongo:27017/farmsdb"
+        #     - name: eureka.client.serviceUrl.defaultZone
+        #       value: "http://localhost:8761/eureka/"
+        #     - name: RABBITMQ_HOST
+        #       value: "s-messaging"
+        #     - name: RABBITMQ_PORT
+        #       value: "5672"
+        #     - name: spring.rabbitmq.host
+        #       value: "s-messaging"
+        #     - name: spring.rabbitmq.port
+        #       value: "5672"
+        #   ports:
+        #     - containerPort: 8082
+        #   resources:
+        #     requests: { cpu: "50m", memory: "256Mi", ephemeral-storage: "100Mi" }
+        #     limits:   { cpu: "400m", memory: "768Mi", ephemeral-storage: "200Mi" }
+
+        # - name: api-gateway
+        #   image: registry.reset.inso-w.at/2025ws-ase-pr-group/api-gateway:latest
+        #   env:
+        #     - name: SERVER_PORT
+        #       value: "8080"
+        #     - name: spring.profiles.active
+        #       value: "prod"
+        #     - name: eureka.client.serviceUrl.defaultZone
+        #       value: "http://localhost:8761/eureka/"
+        #   ports:
+        #     - containerPort: 8080
+        #   resources:
+        #     requests: { cpu: "50m", memory: "256Mi", ephemeral-storage: "100Mi" }
+        #     limits:   { cpu: "500m", memory: "768Mi", ephemeral-storage: "200Mi" }
+        #   readinessProbe:
+        #     httpGet: { path: /health, port: 8080 }
+        #     initialDelaySeconds: 15
+        #     periodSeconds: 10
+        #   livenessProbe:
+        #     httpGet: { path: /health, port: 8080 }
+        #     initialDelaySeconds: 25
+        #     periodSeconds: 10
+
+      imagePullSecrets:
+        - name: secret-dockercfg
+  revisionHistoryLimit: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s-core
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  type: ClusterIP
+  selector:
+    app: bundle-core
+  ports:
+    - name: gateway
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+    - name: eureka
+      port: 8761
+      targetPort: 8761
+      protocol: TCP
+
+---
+# -------------------------
+# POD 2: Aux bundle (Notification + Rule Engine + Sensor Ingestion)
+# Uses Eureka via s-core because Eureka is in the other Pod
+# -------------------------
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: bundle-aux
+#   namespace: 25ws-ase-pr-inso-01
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: bundle-aux
+#   template:
+#     metadata:
+#       labels:
+#         app: bundle-aux
+#     spec:
+#       containers:
+#         - name: notification-service
+#           image: registry.reset.inso-w.at/2025ws-ase-pr-group/notification-service:latest
+#           env:
+#             - name: SERVER_PORT
+#               value: "8085"
+#             - name: spring.profiles.active
+#               value: "prod"
+#             - name: eureka.client.serviceUrl.defaultZone
+#               value: "http://s-core:8761/eureka/"
+#             - name: spring.data.mongodb.uri
+#               value: "mongodb://s-mongo:27017/notificationsdb"
+#             - name: spring.data.mongodb.auto-index-creation
+#               value: "true"
+#             - name: RABBITMQ_HOST
+#               value: "s-messaging"
+#             - name: RABBITMQ_PORT
+#               value: "5672"
+#             - name: spring.rabbitmq.host
+#               value: "s-messaging"
+#             - name: spring.rabbitmq.port
+#               value: "5672"
+#             - name: SPRING_REDIS_HOST
+#               value: "s-messaging"
+#             - name: SPRING_REDIS_PORT
+#               value: "6379"
+#           ports:
+#             - containerPort: 8085
+#           resources:
+#             requests: { cpu: "50m", memory: "256Mi", ephemeral-storage: "100Mi" }
+#             limits:   { cpu: "300m", memory: "768Mi", ephemeral-storage: "200Mi" }
+
+#         - name: rule-engine
+#           image: registry.reset.inso-w.at/2025ws-ase-pr-group/rule-engine:latest
+#           env:
+#             - name: SERVER_PORT
+#               value: "8084"
+#             - name: spring.profiles.active
+#               value: "prod"
+#             - name: eureka.client.serviceUrl.defaultZone
+#               value: "http://s-core:8761/eureka/"
+#             - name: spring.data.mongodb.uri
+#               value: "mongodb://s-mongo:27017/seedsdb"
+#             - name: RABBITMQ_HOST
+#               value: "s-messaging"
+#             - name: RABBITMQ_PORT
+#               value: "5672"
+#             - name: spring.rabbitmq.host
+#               value: "s-messaging"
+#             - name: spring.rabbitmq.port
+#               value: "5672"
+#           ports:
+#             - containerPort: 8084
+#           resources:
+#             requests: { cpu: "50m", memory: "256Mi", ephemeral-storage: "100Mi" }
+#             limits:   { cpu: "300m", memory: "768Mi", ephemeral-storage: "200Mi" }
+
+#         - name: sensor-ingestion-service
+#           image: registry.reset.inso-w.at/2025ws-ase-pr-group/sensor-ingestion-service:latest
+#           env:
+#             - name: RABBITMQ_HOST
+#               value: "s-messaging"
+#             - name: RABBITMQ_PORT
+#               value: "5672"
+#             - name: USERS_MONGO_URI
+#               value: "mongodb://s-mongo:27017/usersdb"
+#             - name: FARMS_MONGO_URI
+#               value: "mongodb://s-mongo:27017/farmsdb"
+#           resources:
+#             requests: { cpu: "25m", memory: "256Mi", ephemeral-storage: "100Mi" }
+#             limits:   { cpu: "250m", memory: "768Mi", ephemeral-storage: "200Mi" }
+
+#       imagePullSecrets:
+#         - name: secret-dockercfg
+#   revisionHistoryLimit: 2
+
+---
+# -------------------------
+# Ingress: expose API gateway
+# -------------------------
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: 25ws-ase-pr-inso-01-ingress
+  namespace: 25ws-ase-pr-inso-01
+spec:
+  rules:
+    - host: "25ws-ase-pr-inso-01.apps.student.inso-w.at"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: s-core
+                port:
+                  number: 8080

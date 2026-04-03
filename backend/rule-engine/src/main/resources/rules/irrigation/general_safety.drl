@@ -1,0 +1,57 @@
+package rules.safety;
+
+import com.agriscope.rule_engine.domain.model.HourlyWeatherData;
+import com.agriscope.rule_engine.domain.model.Recommendation;
+import com.agriscope.rule_engine.domain.enums.RecommendationType;
+
+global java.util.List recommendations;
+
+
+rule "Safety - High Wind Alert"
+    salience 90
+    when
+        $weather : HourlyWeatherData(
+            wind_speed_10m_max >= 15.0
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setRecommendationType(RecommendationType.SAFETY_ALERT);
+        rec.setAdvice("CRITICAL: High Wind Detected. Stop all machinery and secure loose items.");
+        rec.setReasoning("Max wind speed (%.1f m/s) is unsafe for field operations."
+                         .formatted($weather.getWind_speed_10m_max()));
+        recommendations.add(rec);
+end
+
+
+rule "Safety - Thunderstorm Risk"
+    salience 80
+    when
+        $weather : HourlyWeatherData(
+            precipitation_probability >= 60.0,
+            relative_humidity_2m >= 85.0,
+            rain > 0.5
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setRecommendationType(RecommendationType.STORM_ALERT);
+        rec.setAdvice("THUNDERSTORM ALERT: Evacuate exposed areas and seek shelter immediately.");
+        rec.setReasoning("High probability of severe weather (Precipitation Prob: %.1f%%)."
+                         .formatted($weather.getPrecipitation_probability()));
+        recommendations.add(rec);
+end
+
+
+rule "Safety - Heavy Rain/Flood Warning"
+    salience 70
+    when
+        $weather : HourlyWeatherData(
+            precipitation >= 10.0
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setRecommendationType(RecommendationType.DELAY_OPERATIONS);
+        rec.setAdvice("HEAVY RAIN: Delay all planting and harvest operations. Fields will be waterlogged.");
+        rec.setReasoning("Precipitation rate (%.1f mm/h) makes terrain impassable."
+                         .formatted($weather.getPrecipitation()));
+        recommendations.add(rec);
+end

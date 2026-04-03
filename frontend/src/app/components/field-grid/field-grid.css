@@ -1,0 +1,1153 @@
+/* ============================================
+   FARM CONTAINER & LAYOUT
+   ============================================ */
+
+.farm-container {
+  position: relative;
+  width: auto;
+  max-width: 900px;
+  height: auto;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  perspective: 1500px;
+  margin-left: 200px;
+  margin-top: 250px;
+}
+
+.fields-wrapper {
+  position: relative;
+  transform: rotateX(65deg) rotateZ(40deg);
+  transform-style: preserve-3d;
+}
+
+.fields-row {
+  display: flex;
+  gap: 7px;
+  transform-style: preserve-3d;
+}
+
+.fields-row:nth-child(2) {
+  margin-top: 0px;
+  margin-left: 0px;
+}
+
+/* ============================================
+   FIELD BASE STRUCTURE
+   ============================================ */
+
+.field {
+  width: 190px;
+  height: 200px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.field:hover {
+  transform: translateZ(12px);
+}
+
+.field:active {
+  transform: translateZ(5px);
+}
+
+/* ============================================
+   FIELD TOP SURFACE & SOIL TEXTURE
+   ============================================ */
+
+.field-top {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: #8B4513;
+  border-radius: 8px;
+  transform: translateZ(0);
+  border: 4px solid #5C2E0A;
+  overflow: visible;
+  position: relative;
+}
+
+.field-rows {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background: #8B4513;
+  z-index: 1;
+}
+
+.field-rows::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image:
+    radial-gradient(ellipse 200% 10px at 0% 7%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    radial-gradient(ellipse 200% 10px at 100% 7%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    radial-gradient(ellipse 200% 10px at 0% 21%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    radial-gradient(ellipse 200% 10px at 100% 21%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    radial-gradient(ellipse 200% 10px at 0% 35%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    radial-gradient(ellipse 200% 10px at 100% 35%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    radial-gradient(ellipse 200% 10px at 0% 49%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    radial-gradient(ellipse 200% 10px at 100% 49%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    radial-gradient(ellipse 200% 10px at 0% 63%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    radial-gradient(ellipse 200% 10px at 100% 63%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    radial-gradient(ellipse 200% 10px at 0% 77%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    radial-gradient(ellipse 200% 10px at 100% 77%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    radial-gradient(ellipse 200% 10px at 0% 91%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    radial-gradient(ellipse 200% 10px at 100% 91%, #A0522D 0%, #A0522D 40%, transparent 50%),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0px,
+      transparent 3px,
+      #A0522D 3px,
+      #A0522D 11px,
+      transparent 11px,
+      transparent 14px
+    );
+}
+
+.field-rows::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0px,
+      transparent 3px,
+      rgba(184, 121, 77, 0.6) 3px,
+      rgba(184, 121, 77, 0.6) 5px,
+      transparent 5px,
+      transparent 14px
+    );
+}
+
+.field-top::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  box-shadow:
+    inset 0 4px 10px rgba(255, 255, 255, 0.1),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+}
+
+/* ============================================
+   3D FIELD SIDES
+   ============================================ */
+
+.field-bottom-side {
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(to bottom, #4A2508 0%, #2A1504 50%, #1A0A02 100%);
+  position: absolute;
+  bottom: -40px;
+  left: 0;
+  transform-origin: top center;
+  transform: rotateX(-90deg);
+  border-radius: 0 0 8px 8px;
+  z-index: -1;
+}
+
+.field-right-side {
+  width: 40px;
+  height: 100%;
+  background: linear-gradient(to right, #4A2508 0%, #2A1504 50%, #1A0A02 100%);
+  position: absolute;
+  top: 0;
+  right: -40px;
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  border-radius: 0 8px 8px 0;
+  z-index: -1;
+}
+
+/* ============================================
+   CLICK ANIMATION
+   ============================================ */
+
+@keyframes clickPulse {
+  0%, 100% { transform: translateZ(0); }
+  50% { transform: translateZ(-5px); }
+}
+
+.field.clicked {
+  animation: clickPulse 0.3s ease;
+}
+
+/* ============================================
+   PLUS BUTTON (Add Field)
+   ============================================ */
+
+.plus-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #8B4513 100%);
+  border: 5px solid #5C2E0A;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    inset 0 3px 8px rgba(139, 69, 19, 0.4),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.plus-button::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.1) 2px,
+    rgba(0, 0, 0, 0.1) 4px
+  );
+  pointer-events: none;
+}
+
+.plus-button span {
+  font-size: 48px;
+  font-weight: bold;
+  color: #FFF8DC;
+  text-shadow:
+    2px 2px 4px rgba(0, 0, 0, 0.6),
+    0 0 8px rgba(255, 248, 220, 0.3);
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.plus-button:hover {
+  transform: translate(-50%, -50%) scale(1.15);
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.6),
+    inset 0 3px 10px rgba(160, 82, 45, 0.5),
+    inset 0 -3px 10px rgba(0, 0, 0, 0.5);
+  border-color: #8B4513;
+}
+
+.plus-button:active {
+  transform: translate(-50%, -50%) scale(1.05);
+  box-shadow:
+    0 4px 15px rgba(0, 0, 0, 0.5),
+    inset 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* ============================================
+   FIELD HOVER STATES
+   ============================================ */
+
+.field.has-plus:hover {
+  transform: translateZ(20px);
+}
+
+.field:not(.has-plus):hover {
+  transform: translateZ(0);
+}
+
+.field.planted.clickable {
+  cursor: pointer;
+}
+
+.field.planted:hover {
+  transform: translateZ(25px);
+}
+
+/* ============================================
+   PLANTS CONTAINER & GRID
+   ============================================ */
+
+.plants-container {
+  position: absolute;
+  top: -50px;
+  left: -50px;
+  right: 100px;
+  width: calc(100%);
+  height: calc(100%);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  padding: 15px;
+  gap: -150px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.plant-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: plantGrow 0.6s ease-out;
+  z-index: 100;
+  margin: -45px;
+}
+
+.plant-icon {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(3px 3px 6px rgba(0, 0, 0, 0.6));
+  pointer-events: auto;
+  z-index: 100;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotate(-40deg);
+}
+
+/* ============================================
+   PLANT GROWTH ANIMATION
+   ============================================ */
+
+@keyframes plantGrow {
+  0% {
+    transform: scale(0) translateY(15px) rotate(-15deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.2) translateY(-3px) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Animation delays for each plant */
+.plant-item:nth-child(1) { animation-delay: 0s; }
+.plant-item:nth-child(2) { animation-delay: 0.05s; }
+.plant-item:nth-child(3) { animation-delay: 0.1s; }
+.plant-item:nth-child(4) { animation-delay: 0.15s; }
+.plant-item:nth-child(5) { animation-delay: 0.2s; }
+.plant-item:nth-child(6) { animation-delay: 0.25s; }
+.plant-item:nth-child(7) { animation-delay: 0.3s; }
+.plant-item:nth-child(8) { animation-delay: 0.35s; }
+.plant-item:nth-child(9) { animation-delay: 0.4s; }
+.plant-item:nth-child(10) { animation-delay: 0.45s; }
+.plant-item:nth-child(11) { animation-delay: 0.5s; }
+.plant-item:nth-child(12) { animation-delay: 0.55s; }
+.plant-item:nth-child(13) { z-index: 103; animation-delay: 0.6s; }
+.plant-item:nth-child(14) { z-index: 104; animation-delay: 0.65s; }
+.plant-item:nth-child(15) { z-index: 105; animation-delay: 0.7s; }
+.plant-item:nth-child(16) { z-index: 106; animation-delay: 0.75s; }
+
+/* ============================================
+   PLANT DEPTH/PERSPECTIVE SCALING
+   ============================================ */
+
+.field.planted .field-top {
+  perspective: 1000px;
+  overflow: visible;
+}
+
+/* Front row - smallest (furthest away in perspective) */
+.plant-item:nth-child(1),
+.plant-item:nth-child(2),
+.plant-item:nth-child(3) {
+  transform: scale(0.8);
+}
+
+/* Second row */
+.plant-item:nth-child(4),
+.plant-item:nth-child(5),
+.plant-item:nth-child(6) {
+  transform: scale(0.9);
+}
+
+/* Third row */
+.plant-item:nth-child(7),
+.plant-item:nth-child(8),
+.plant-item:nth-child(9) {
+  transform: scale(0.95);
+}
+
+/* Fourth row */
+.plant-item:nth-child(10),
+.plant-item:nth-child(11),
+.plant-item:nth-child(12) {
+  transform: scale(1.05);
+}
+
+/* Back row - largest (closest in perspective) */
+.plant-item:nth-child(13),
+.plant-item:nth-child(14),
+.plant-item:nth-child(15) {
+  transform: scale(1.10);
+}
+
+/* ============================================
+   MODAL OVERLAY & BASE STYLES
+   ============================================ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background: linear-gradient(135deg, #F5DEB3 0%, #E8D4A8 100%);
+  border: 5px solid #8B4513;
+  border-radius: 24px;
+  padding: 45px 50px;
+  width: 650px;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  animation: slideUp 0.3s ease;
+  position: relative;
+  z-index: 10000;
+}
+
+/* ============================================
+   SEED SELECTION GRID
+   ============================================ */
+
+.seed-selection {
+  margin-bottom: 30px;
+}
+
+.seed-label {
+  margin: 0 0 20px 0;
+  color: #5C2E0A;
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.seed-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.seed-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 10px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 3px solid #D2B48C;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 110px;
+}
+
+.seed-option img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.seed-option span {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #5C2E0A;
+  text-align: center;
+}
+
+.seed-option:hover {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: #CD853F;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.seed-option.selected {
+  background: rgba(82, 167, 34, 0.2);
+  border-color: #52A722;
+  border-width: 4px;
+  box-shadow:
+    0 4px 12px rgba(82, 167, 34, 0.3),
+    inset 0 2px 4px rgba(82, 167, 34, 0.2);
+}
+
+.seed-option img[alt="Wheat"],
+.seed-option img[alt="Corn"] {
+  width: 90px;
+  height: 90px;
+}
+
+.seed-option:has(img[alt="Barley"]) span {
+  margin-top: 25px;
+}
+
+/* ============================================
+   DATE INPUT SECTION
+   ============================================ */
+
+.date-section {
+  margin-bottom: 30px;
+}
+
+.date-label {
+  margin: 0 0 12px 0;
+  color: #5C2E0A;
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.date-input {
+  width: 100%;
+  padding: 16px 20px;
+  border: 3px solid #D2B48C;
+  border-radius: 12px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #5C2E0A;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.date-input:focus {
+  border-color: #52A722;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 0 3px rgba(82, 167, 34, 0.1);
+}
+
+.date-input::placeholder {
+  color: #A0A0A0;
+}
+
+/* ============================================
+   MODAL BUTTONS
+   ============================================ */
+
+.modal-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.add-button, .cancel-button {
+  padding: 16px 48px;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-button {
+  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(210, 105, 30, 0.3);
+}
+
+.add-button:hover {
+  background: linear-gradient(135deg, #E07B2E 0%, #DAA520 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(210, 105, 30, 0.4);
+}
+
+.add-button:active {
+  transform: translateY(0);
+}
+
+.cancel-button {
+  background: linear-gradient(135deg, #D3D3D3 0%, #C0C0C0 100%);
+  color: #5C2E0A;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cancel-button:hover {
+  background: linear-gradient(135deg, #E0E0E0 0%, #D0D0D0 100%);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   MODAL ANIMATIONS
+   ============================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   FIELD DETAILS MODAL
+   ============================================ */
+
+.details-content {
+  margin: 20px 0;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin: 8px 0;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  border: 2px solid #D2B48C;
+}
+
+.detail-label {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #5C2E0A;
+}
+
+.detail-value {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: #8B4513;
+  text-transform: capitalize;
+}
+
+.coming-soon {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(82, 167, 34, 0.1);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.coming-soon p {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  color: #5A8F3B;
+  font-style: italic;
+  margin: 0;
+}
+/* ============================================
+   DEVELOPER CONTROLS
+   ============================================ */
+
+.dev-controls {
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  width: 320px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.95);
+  border: 3px solid #52A722;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  z-index: 9998;
+  font-family: 'Poppins', sans-serif;
+}
+
+.dev-controls h3 {
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  color: #52A722;
+}
+
+.dev-field-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dev-field-item {
+  background: rgba(82, 167, 34, 0.1);
+  padding: 12px;
+  border-radius: 8px;
+  border: 2px solid rgba(82, 167, 34, 0.3);
+}
+
+.dev-field-item strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.status-badge {
+  display: inline-block;
+  font-size: 12px;
+  color: #666;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 5px;
+}
+
+.dev-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dev-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dev-btn.advance {
+  background: linear-gradient(135deg, #52A722 0%, #6BC134 100%);
+  color: white;
+}
+
+.dev-btn.advance:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5CB62A 0%, #75CA3E 100%);
+  transform: translateY(-2px);
+}
+
+.dev-btn.reset {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.dev-btn.reset:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e4495d 0%, #d03444 100%);
+  transform: translateY(-2px);
+}
+
+.dev-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ============================================
+   READY STATE - GLOWING EFFECT
+   ============================================ */
+
+.field.ready .field-top {
+  border-color: #FFD700;
+  box-shadow:
+    0 0 20px rgba(255, 215, 0, 0.6),
+    0 0 40px rgba(255, 215, 0, 0.4),
+    inset 0 0 20px rgba(255, 215, 0, 0.2);
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(255, 215, 0, 0.6),
+      0 0 40px rgba(255, 215, 0, 0.4),
+      inset 0 0 20px rgba(255, 215, 0, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(255, 215, 0, 0.8),
+      0 0 60px rgba(255, 215, 0, 0.6),
+      inset 0 0 30px rgba(255, 215, 0, 0.3);
+  }
+}
+
+.field.ready:hover {
+  transform: translateZ(30px);
+}
+
+/* ============================================
+   READY BADGE - STRONGER GLOW VERSION
+   ============================================ */
+
+.ready-badge {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+
+  transform:
+    translateX(-50%)
+    translateZ(20px)
+    rotateX(-55deg);
+
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #8B4513;
+  padding: 12px 24px;
+  border-radius: 20px;
+  border: 3px solid #8B4513;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+
+  box-shadow:
+    0 6px 25px rgba(255, 215, 0, 0.6),
+    0 0 35px rgba(255, 215, 0, 0.5),
+    0 0 50px rgba(255, 165, 0, 0.3),
+    inset 0 3px 8px rgba(255, 255, 255, 0.6),
+    inset 0 -2px 6px rgba(139, 69, 19, 0.3);
+
+  animation: floatBadge 2s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+@keyframes floatBadge {
+  0%, 100% {
+    transform:
+      translateX(-50%)
+      translateZ(60px)
+      rotateX(-55deg)
+      translateY(0px);
+
+    box-shadow:
+      0 6px 25px rgba(255, 215, 0, 0.6),
+      0 0 35px rgba(255, 215, 0, 0.5),
+      0 0 50px rgba(255, 165, 0, 0.3),
+      inset 0 3px 8px rgba(255, 255, 255, 0.6),
+      inset 0 -2px 6px rgba(139, 69, 19, 0.3);
+  }
+  50% {
+    transform:
+      translateX(-50%)
+      translateZ(70px)
+      rotateX(-55deg)
+      translateY(-8px);
+
+    box-shadow:
+      0 8px 35px rgba(255, 215, 0, 0.8),
+      0 0 50px rgba(255, 215, 0, 0.7),
+      0 0 70px rgba(255, 165, 0, 0.5),
+      inset 0 3px 10px rgba(255, 255, 255, 0.7),
+      inset 0 -2px 6px rgba(139, 69, 19, 0.3);
+  }
+}
+
+.ready-badge span {
+  display: block;
+  text-shadow:
+    0 0 10px rgba(255, 215, 0, 0.5),
+    0 0 5px rgba(255, 165, 0, 0.3);
+}
+
+.field.ready {
+  transform-style: preserve-3d;
+}
+/* ============================================
+   HARVEST MODAL
+   ============================================ */
+
+.harvest-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.harvest-modal {
+  border-color: #FFD700;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.harvest-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.harvest-icon {
+  width: 50px;
+  height: 50px;
+  color: #52A722;
+  background: rgba(82, 167, 34, 0.1);
+  padding: 10px;
+  border-radius: 50%;
+}
+
+.harvest-content {
+  margin: 20px 0;
+}
+
+.harvest-info {
+  background: rgba(255, 215, 0, 0.1);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.status-ready {
+  color: #52A722;
+  font-weight: 700;
+}
+
+.harvest-warning {
+  background: rgba(255, 165, 0, 0.1);
+  border: 2px solid rgba(255, 165, 0, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 15px;
+}
+
+.harvest-warning p {
+  margin: 0;
+  color: #D2691E;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.harvest-button {
+  padding: 16px 48px;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #8B4513;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+.harvest-button:hover {
+  background: linear-gradient(135deg, #FFED4E 0%, #FFB94E 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 215, 0, 0.5);
+}
+
+.harvest-button:active {
+  transform: translateY(0);
+}
+
+/* ============================================
+   HARVEST NOW BUTTON
+   ============================================ */
+
+.harvest-now-btn {
+  position: absolute;
+  top: -70px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #8B4513;
+  border: 3px solid #8B4513;
+  border-radius: 20px;
+
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+
+  cursor: pointer;
+  z-index: 200;
+
+  box-shadow:
+    0 6px 20px rgba(255, 215, 0, 0.5),
+    inset 0 2px 4px rgba(255, 255, 255, 0.4);
+
+  transition: all 0.3s ease;
+  animation: buttonPulse 2s ease-in-out infinite;
+}
+
+.harvest-now-btn:hover {
+  background: linear-gradient(135deg, #FFED4E 0%, #FFB94E 100%);
+  transform: translateX(-50%) translateY(-5px) scale(1.05);
+  box-shadow:
+    0 8px 25px rgba(255, 215, 0, 0.6),
+    inset 0 2px 6px rgba(255, 255, 255, 0.5);
+}
+
+.harvest-now-btn:active {
+  transform: translateX(-50%) translateY(-2px) scale(1.0);
+  box-shadow:
+    0 4px 15px rgba(255, 215, 0, 0.5),
+    inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes buttonPulse {
+  0%, 100% {
+    box-shadow:
+      0 6px 20px rgba(255, 215, 0, 0.5),
+      inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 8px 30px rgba(255, 215, 0, 0.7),
+      inset 0 2px 6px rgba(255, 255, 255, 0.5);
+  }
+}
+
+.field.ready:hover .harvest-now-btn {
+  z-index: 250;
+}
+
+.harvest-now-btn::before {
+  content: '🌾 ';
+  margin-right: 5px;
+}
+/* ============================================
+   GROWING STAGE
+   ============================================ */
+
+.field[data-field].growing .plants-container {
+  grid-template-columns: repeat(4, 1fr) !important;
+  grid-template-rows: repeat(4, 1fr) !important;
+  gap: -10px !important;
+  padding: 8px !important;
+  top: -65px !important;
+  left: -65px !important;
+}
+
+/* Show ALL 16 plants for growing */
+.field[data-field].growing .plant-item {
+  display: flex !important;
+  margin: -500px !important;
+}
+
+/* READY STAGE - 3x3 grid (9 plants) */
+.field[data-field].ready .plants-container {
+  grid-template-columns: repeat(3, 1fr) !important;
+  grid-template-rows: repeat(3, 1fr) !important;
+  gap: 15px !important;
+  padding: 7px !important;
+}
+
+.field[data-field].ready .plant-item:nth-child(n+10) {
+  display: none !important;
+}
+
+.field[data-field].ready .plant-item {
+  margin: -250px !important;
+}
+
+.plant-icon[src*="wheat_growing"] {
+  width: 140px !important;
+  height: 140px !important;
+}
+
+.plant-icon[src*="wheat_ready"] {
+  width: 190px !important;
+  height: 190px !important;
+}
+
+.plant-icon[src*="corn_growing"] {
+  width: 130px !important;
+  height: 130px !important;
+}
+
+.plant-icon[src*="corn_ready"] {
+  width: 220px !important;
+  height: 220px !important;
+}
+
+.plant-icon[src*="barely_growing"] {
+  width: 145px !important;
+  height: 145px !important;
+}
+
+.plant-icon[src*="barely_ready"] {
+  width: 220px !important;
+  height: 220px !important;
+}
+
+.plant-icon[src*="black_grape_growing"] {
+  width: 140px !important;
+  height: 140px !important;
+}
+
+.plant-icon[src*="black_grape_ready"] {
+  width: 170px !important;
+  height: 180px !important;
+}
+
+.plant-icon[src*="white_grape_ready"] {
+  width: 160px !important;
+  height: 240px !important;
+}
+
+.field.growing,
+.field.growing .field-top {
+  overflow: visible !important;
+}
+
+/* ============================================
+   PUMPKIN FIELD: 2x2 grid (4 plants only)
+   for both growing and ready stages
+   ============================================ */
+
+.field[data-field].growing .plants-container:has(.plant-icon[src*="pumpkin"]) {
+  grid-template-columns: repeat(2, 1fr) !important;
+  grid-template-rows: repeat(2, 1fr) !important;
+  gap: -15px !important;
+  padding: 10px !important;
+  top: -40px !important;
+  left: -30px !important;
+}
+
+.field[data-field].growing .plant-item:has(.plant-icon[src*="pumpkin"]):nth-child(n+5) {
+  display: none !important;
+}
+
+.field[data-field].growing .plant-item:has(.plant-icon[src*="pumpkin"]) {
+  margin: -100px !important;
+}
+
+.field[data-field].ready .plants-container:has(.plant-icon[src*="pumpkin"]) {
+  grid-template-columns: repeat(2, 1fr) !important;
+  grid-template-rows: repeat(2, 1fr) !important;
+  gap: -15px !important;
+  padding: 10px !important;
+}
+
+.field[data-field].ready .plant-item:has(.plant-icon[src*="pumpkin"]):nth-child(n+5) {
+  display: none !important;
+}
+
+.field[data-field].ready .plant-item:has(.plant-icon[src*="pumpkin"]) {
+  margin: -100px !important;
+}
+
+.plant-icon[src*="pumpkin_growing"] {
+  width: 140px !important;
+  height: 140px !important;
+}
+
+.plant-icon[src*="pumpkin_ready"] {
+  width: 190px !important;
+  height: 190px !important;
+}

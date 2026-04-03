@@ -1,0 +1,203 @@
+package rules.irrigation;
+
+import com.agriscope.rule_engine.domain.model.Seed;
+import com.agriscope.rule_engine.domain.model.FarmDetails;
+import com.agriscope.rule_engine.domain.model.Recommendation;
+import com.agriscope.rule_engine.domain.model.FieldStatus;
+import com.agriscope.rule_engine.domain.dto.DailyAnalysis;
+import com.agriscope.rule_engine.domain.enums.SeedType;
+import com.agriscope.rule_engine.domain.enums.SoilType;
+import com.agriscope.rule_engine.domain.enums.RecommendationType;
+import com.agriscope.rule_engine.domain.enums.GrowthStage;
+
+global java.util.List recommendations;
+
+
+rule "Black Grapes - Ready - Stop Irrigation"
+    salience 200
+    activation-group "blackgrapes-irrigation"
+    when
+        $seed   : Seed(seedType == SeedType.BLACK_GRAPES)
+        $status : FieldStatus(seedType == SeedType.BLACK_GRAPES, stage == GrowthStage.READY, $fid : fieldId)
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.BLACK_GRAPES);
+        rec.setRecommendationType(RecommendationType.READY_TO_HARVEST);
+        rec.setAdvice("STOP Irrigation - Harvest Approaching");
+        rec.setReasoning("Grapes are in 'Ready' stage. Irrigation now will dilute sugars and flavors, and may cause berry splitting.");
+        recommendations.add(rec);
+end
+
+
+rule "Delay Irrigation - BLACK GRAPES"
+    salience 99
+    activation-group "blackgrapes-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.BLACK_GRAPES, $stage : stage, $fid : fieldId)
+        $farm   : FarmDetails($soil : soilType)
+        $seed   : Seed(seedType == SeedType.BLACK_GRAPES)
+
+        $calc   : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit > $seed.allowedWaterDeficit * $seed.getParam("delay_deficit_factor", 1.1)
+        )
+
+        $analysis : DailyAnalysis(
+            currentSoilMoisture < $seed.minSoilMoisture,
+            totalRain > $seed.heavyRainThreshold
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.BLACK_GRAPES);
+        rec.setRecommendationType(RecommendationType.DELAY_IRRIGATION);
+        rec.setAdvice("Delay Irrigation (" + $stage + ") - Rain Forecast");
+        rec.setReasoning("Rain forecast (" + String.format("%.1f", $analysis.getTotalRain()) +
+                         "mm) is sufficient. Grapes benefit from this dry-down period.");
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        recommendations.add(rec);
+end
+
+
+rule "Irrigation - BLACK GRAPES - Urgent"
+    salience 50
+    activation-group "blackgrapes-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.BLACK_GRAPES, $stage : stage, $fid : fieldId)
+        $farm   : FarmDetails($soil : soilType)
+        $seed   : Seed(seedType == SeedType.BLACK_GRAPES)
+
+        $calc : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit > $seed.allowedWaterDeficit * $seed.getParam("urgent_deficit_factor", 1.2)
+        )
+
+        $analysis : DailyAnalysis(
+            currentSoilMoisture < $seed.minSoilMoisture * $seed.getParam("urgent_moisture_factor", 0.7)
+        )
+
+        not DailyAnalysis(totalRain > $seed.heavyRainThreshold)
+    then
+       Recommendation rec = new Recommendation();
+       rec.setFieldId($fid);
+       rec.setRecommendedSeed(SeedType.BLACK_GRAPES);
+       rec.setRecommendationType(RecommendationType.IRRIGATE_NOW);
+
+       String urgency = "URGENT";
+       String context = "";
+       if ($stage == GrowthStage.MATURE) {
+           urgency = "IMPORTANT";
+           context = "Veraison: Excessive stress is now risking leaf loss and sunburn on berries.";
+       } else if ($stage == GrowthStage.YOUNG) {
+           context = "Vegetative growth: Canopy needs water to establish.";
+       } else {
+            context = "Vines are severely stressed.";
+       }
+
+       double threshold = $seed.getAllowedWaterDeficit() * $seed.getParam("urgent_deficit_factor", 1.2);
+
+       rec.setAdvice(urgency + ": Irrigate Black Grapes (" + $stage + ")");
+
+       rec.setReasoning(context + " Deficit: " + String.format("%.1f", $calc.getDeficit()) +
+                        " mm (Threshold: " + String.format("%.1f", threshold) + " mm). Avoid heavy irrigation.");
+
+       rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+       rec.getMetrics().put("crop_stage", $stage.toString());
+       recommendations.add(rec);
+end
+
+
+rule "Irrigation Soon Warning - BLACK GRAPES"
+    salience 40
+    activation-group "blackgrapes-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.BLACK_GRAPES, $stage : stage, $fid : fieldId)
+        $seed   : Seed(seedType == SeedType.BLACK_GRAPES)
+
+        $calc : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit > $seed.allowedWaterDeficit * $seed.getParam("soon_deficit_min", 0.8),
+            deficit <= $seed.allowedWaterDeficit * $seed.getParam("soon_deficit_max", 1.2)
+        )
+
+        $analysis : DailyAnalysis(
+            currentSoilMoisture >= $seed.minSoilMoisture * $seed.getParam("soon_moisture_min", 0.6),
+            currentSoilMoisture < $seed.minSoilMoisture * $seed.getParam("soon_moisture_max", 0.8)
+        )
+
+        not DailyAnalysis(totalRain > $seed.heavyRainThreshold)
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.BLACK_GRAPES);
+        rec.setRecommendationType(RecommendationType.IRRIGATE_SOON);
+
+        double minThr = $seed.getAllowedWaterDeficit() * $seed.getParam("soon_deficit_min", 0.8);
+        double maxThr = $seed.getAllowedWaterDeficit() * $seed.getParam("soon_deficit_max", 1.2);
+
+        rec.setAdvice("Monitor/Plan Irrigation (" + $stage + ")");
+
+        rec.setReasoning("Vines in optimal stress zone (RDI). Deficit: " + String.format("%.1f", $calc.getDeficit()) +
+                         " mm. Warning Range: " + String.format("%.1f", minThr) + " - " + String.format("%.1f", maxThr) + " mm.");
+
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        recommendations.add(rec);
+end
+
+
+rule "No Action Needed - BLACK GRAPES"
+    salience 10
+    activation-group "blackgrapes-irrigation"
+    when
+        $status : FieldStatus(seedType == SeedType.BLACK_GRAPES, $stage : stage, $fid : fieldId)
+        $seed   : Seed(seedType == SeedType.BLACK_GRAPES)
+
+        $calc : WaterDeficitResult(
+            seed == $seed,
+            fieldId == $fid,
+            deficit <= $seed.allowedWaterDeficit * $seed.getParam("normal_deficit_limit", 0.75)
+        )
+        $analysis : DailyAnalysis(
+            currentSoilMoisture >= $seed.minSoilMoisture
+        )
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.BLACK_GRAPES);
+        rec.setRecommendationType(RecommendationType.CONTINUE_NORMAL);
+
+        double limit = $seed.getAllowedWaterDeficit() * $seed.getParam("normal_deficit_limit", 0.75);
+
+        rec.setAdvice("Black Grapes Conditions Optimal (" + $stage + ")");
+
+        rec.setReasoning("Moisture levels ideal. Deficit: " + String.format("%.1f", $calc.getDeficit()) +
+                         " mm (Safe below: " + String.format("%.1f", limit) + " mm). No action needed.");
+
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        recommendations.add(rec);
+end
+
+
+rule "Monitor Conditions - BLACK GRAPES (Fallback)"
+    salience 1
+    activation-group "blackgrapes-irrigation"
+    when
+        $seed   : Seed(seedType == SeedType.BLACK_GRAPES)
+        $status : FieldStatus(seedType == SeedType.BLACK_GRAPES, $stage : stage, $fid : fieldId)
+        $calc   : WaterDeficitResult(seed == $seed, fieldId == $fid)
+        $analysis : DailyAnalysis()
+    then
+        Recommendation rec = new Recommendation();
+        rec.setFieldId($fid);
+        rec.setRecommendedSeed(SeedType.BLACK_GRAPES);
+        rec.setRecommendationType(RecommendationType.MONITOR_CONDITIONS);
+        rec.setAdvice("Monitor Black Grapes Conditions (" + $stage + ")");
+        rec.setReasoning("Conditions stable. Controlled stress is beneficial. Deficit: " + String.format("%.1f", $calc.getDeficit()) + " mm.");
+        rec.getMetrics().put("deficit_amount", $calc.getDeficit());
+        rec.getMetrics().put("rule_fired", "blackgrapes-monitor-fallback");
+        recommendations.add(rec);
+end

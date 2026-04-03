@@ -1,0 +1,66 @@
+<div class="page-container">
+
+  <div class="content-area">
+
+    <div class="left-content">
+    </div>
+
+    <div class="right-content">
+      <div class="login-card">
+
+        <h1 class="login-title">
+          Login <img src="assets/icons/farm-icon.png" class="login-icon">
+        </h1>
+
+        <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+
+          <label>Email</label>
+          <input type="email"
+                 name="email"
+                 [(ngModel)]="email"
+                 required
+                 email
+                 placeholder="username@email.com"
+                 [class.error-input]="loginFailed">
+
+          <label>Password</label>
+          <div class="password-row">
+            <input [type]="showPassword ? 'text' : 'password'"
+                   name="password"
+                   [(ngModel)]="password"
+                   required
+                   placeholder="Password"
+                   [class.error-input]="loginFailed">
+
+            <button type="button"
+                    class="password-toggle"
+                    (click)="togglePasswordVisibility()"
+                    tabindex="-1">
+              <img *ngIf="!showPassword"
+                   src="assets/icons/eye-closed.svg"
+                   alt="Show password"
+                   class="eye-icon">
+              <img *ngIf="showPassword"
+                   src="assets/icons/eye-open.svg"
+                   alt="Hide password"
+                   class="eye-icon">
+            </button>
+          </div>
+
+          <a class="forgot-link" href="forgot-password" >Forgot Password?</a>
+
+          <button type="submit" [disabled]="loginForm.invalid" class="signin-btn">
+            Sign in
+          </button>
+
+        </form>
+
+        <div class="signup-row">
+          Don't have an account yet?
+          <a href="signup">Register for free!</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

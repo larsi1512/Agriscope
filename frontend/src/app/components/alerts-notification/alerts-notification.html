@@ -1,0 +1,65 @@
+<div class="alerts-notification-wrapper">
+  <!-- Notification Icon -->
+  <div class="notification-icon-wrapper" (click)="toggleDropdown()">
+    <img src="assets/icons/notification.svg" class="topbar-icon" />
+    <span *ngIf="hasAlerts()" class="alerts-badge">{{ getAlertsCount() }}</span>
+  </div>
+
+  <!-- Alerts Dropdown -->
+  <div class="alerts-dropdown" *ngIf="isDropdownOpen">
+
+    <!-- Header -->
+    <div class="alerts-header">
+      <h3>🚨 Alerts</h3>
+      <button *ngIf="hasAlerts()" class="clear-all-btn" (click)="clearAllAlerts()">
+        Clear All
+      </button>
+    </div>
+
+    <!-- Alerts List -->
+    <div class="alerts-list" *ngIf="hasAlerts()">
+      <div class="alert-item" *ngFor="let alert of alerts">
+
+        <!-- Alert Type -->
+        <div class="alert-type-badge" [style.background-color]="getAlertTypeInfo(alert.recommendationType).color">
+          <span class="type-icon">{{ getAlertTypeInfo(alert.recommendationType).icon }}</span>
+          <span class="type-label">{{ getAlertTypeInfo(alert.recommendationType).label }}</span>
+        </div>
+
+        <!-- Alert Content -->
+        <div class="alert-content">
+
+          <div class="alert-info">
+            <img [src]="getSeedIcon(alert.recommendedSeed)" class="seed-icon-mini" />
+            <span class="seed-name">{{ formatSeedName(alert.recommendedSeed) }}</span>
+          </div>
+          <h4 class="alert-title">{{ formatAdviceTitle(alert.advice) }}</h4>
+
+          <p class="alert-description">{{ formatReasoning(alert.reasoning) }}</p>
+
+          <div class="alert-metrics water-metric" *ngIf="isIrrigationAlert(alert.recommendationType)">
+            <span class="metric-icon">💧</span>
+            <span class="metric-value">{{ formatDeficit(alert) }}</span>
+          </div>
+
+          <div class="alert-metrics temp-metric" *ngIf="!isIrrigationAlert(alert.recommendationType) && alert.metrics?.temperature !== undefined">
+            <span class="metric-icon">🌡️</span>
+            <span class="metric-value">{{ formatTemperature(alert.metrics.temperature) }}</span>
+          </div>
+
+          <div class="alert-footer">
+            <span class="alert-time">{{ formatExactTime(alert.receivedAt) }}</span>
+            <button class="dismiss-btn" (click)="dismissAlert(alert.id)">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-alerts" *ngIf="!hasAlerts()">
+      <span class="empty-icon">🔔</span>
+      <p class="empty-text">No alerts at the moment</p>
+      <p class="empty-subtext">You're all caught up!</p>
+    </div>
+  </div>
+</div>

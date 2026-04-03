@@ -1,0 +1,274 @@
+<div class="page-container">
+
+  <app-topbar
+    [showFarmTitle]="false">
+  </app-topbar>
+
+  <!-- Content Area -->
+  <div class="content-area">
+    <div class="profile-content">
+
+      <!-- Profile Card -->
+      <div class="profile-card">
+
+        <!-- Header -->
+        <div class="profile-header">
+          <div class="header-left">
+            <img src="assets/icons/my_profile.svg" class="header-icon" />
+            <h1 class="profile-title">My Profile</h1>
+          </div>
+          <button class="delete-profile-btn" (click)="showDeleteModal = true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="avatar-section-centered">
+          <div class="avatar-container">
+            <img [src]="profilePicture || 'assets/icons/no_profile_photo.svg'"
+                 class="profile-avatar"
+                 alt="Profile Picture" />
+            <button class="change-avatar-btn" (click)="fileInput.click()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </button>
+            <input #fileInput
+                   type="file"
+                   accept="image/*"
+                   (change)="onFileSelected($event)"
+                   style="display: none" />
+          </div>
+          <p class="avatar-hint">Click to change profile picture</p>
+        </div>
+
+        <div class="profile-grid">
+
+          <div class="left-column">
+
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text"
+                     name="firstName"
+                     [(ngModel)]="userData.firstName"
+                     required
+                     placeholder="Max"
+                     [class.changed]="hasChanges('firstName')">
+            </div>
+
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text"
+                     name="lastName"
+                     [(ngModel)]="userData.lastName"
+                     required
+                     placeholder="Mustermann"
+                     [class.changed]="hasChanges('lastName')">
+            </div>
+
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email"
+                     name="email"
+                     [(ngModel)]="userData.email"
+                     readonly
+                     class="readonly-input">
+              <span class="readonly-hint">Email cannot be changed</span>
+            </div>
+
+          </div>
+
+          <div class="right-column">
+
+            <div class="password-section">
+              <div class="section-header">
+                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                <h3>Change Password</h3>
+              </div>
+
+              <div class="form-group">
+                <label>Current Password</label>
+                <div class="password-row">
+                  <input [type]="showCurrentPassword ? 'text' : 'password'"
+                         name="currentPassword"
+                         [(ngModel)]="passwordData.currentPassword"
+                         placeholder="Enter current password">
+                  <button type="button"
+                          class="password-toggle"
+                          (click)="toggleCurrentPassword()">
+                    <img *ngIf="!showCurrentPassword" src="assets/icons/eye-closed.svg" class="eye-icon">
+                    <img *ngIf="showCurrentPassword" src="assets/icons/eye-open.svg" class="eye-icon">
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>New Password</label>
+                <div class="password-row">
+                  <input [type]="showNewPassword ? 'text' : 'password'"
+                         name="newPassword"
+                         [(ngModel)]="passwordData.newPassword"
+                         placeholder="Enter new password">
+                  <button type="button"
+                          class="password-toggle"
+                          (click)="toggleNewPassword()">
+                    <img *ngIf="!showNewPassword" src="assets/icons/eye-closed.svg" class="eye-icon">
+                    <img *ngIf="showNewPassword" src="assets/icons/eye-open.svg" class="eye-icon">
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <div class="password-row">
+                  <input [type]="showConfirmPassword ? 'text' : 'password'"
+                         name="confirmPassword"
+                         [(ngModel)]="passwordData.confirmPassword"
+                         placeholder="Confirm new password">
+                  <button type="button"
+                          class="password-toggle"
+                          (click)="toggleConfirmPassword()">
+                    <img *ngIf="!showConfirmPassword" src="assets/icons/eye-closed.svg" class="eye-icon">
+                    <img *ngIf="showConfirmPassword" src="assets/icons/eye-open.svg" class="eye-icon">
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="action-buttons">
+          <button type="button"
+                  class="discard-btn"
+                  (click)="onDiscard()"
+                  [disabled]="!hasAnyChanges()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            Discard Changes
+          </button>
+
+          <button type="submit"
+                  class="save-btn"
+                  [disabled]="!hasAnyChanges()"
+                  (click)="onSave()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M5 13l4 4L19 7"/>
+            </svg>
+            Save Changes
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <button class="back-button" (click)="goBack()">
+    <svg class="back-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+    </svg>
+    <span>Back</span>
+  </button>
+
+  <div class="modal-overlay" *ngIf="showDeleteModal" (click)="showDeleteModal = false">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <svg class="modal-icon warning" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <h2>Delete Profile?</h2>
+      </div>
+
+      <div class="modal-body">
+        <p>Are you sure you want to delete your profile?</p>
+        <p class="warning-text">
+          <strong>Warning:</strong> All your data, farms, and settings will be permanently lost. This action cannot be undone.
+        </p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn cancel-btn" (click)="showDeleteModal = false">
+          Cancel
+        </button>
+        <button class="modal-btn delete-btn" (click)="deleteProfile()">
+          Delete Profile
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+     DISCARD CHANGES MODAL
+     ============================================ -->
+
+  <div class="modal-overlay discard-overlay" *ngIf="showDiscardModal" (click)="showDiscardModal = false">
+    <div class="modal-content discard-modal" (click)="$event.stopPropagation()">
+
+      <div class="discard-header">
+        <svg class="discard-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <h2>Discard Changes?</h2>
+      </div>
+
+      <div class="discard-body">
+        <p class="main-message">Are you sure you want to discard all unsaved changes?</p>
+
+        <div class="changes-list" *ngIf="getChangedFields().length > 0">
+          <p class="changes-label">Changes that will be lost:</p>
+          <ul class="changed-items">
+            <li *ngFor="let field of getChangedFields()">
+              <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              {{ field }}
+            </li>
+          </ul>
+        </div>
+
+        <div class="warning-box">
+          <svg class="warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p>This action cannot be undone</p>
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="cancel-button" (click)="showDiscardModal = false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          Keep Editing
+        </button>
+        <button class="confirm-discard-button" (click)="confirmDiscard()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+          Discard Changes
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

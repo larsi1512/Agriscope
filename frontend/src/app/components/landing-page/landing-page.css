@@ -1,0 +1,219 @@
+/* ============================================
+   LANDING PAGE CONTAINER
+   ============================================ */
+
+.landing-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ============================================
+   BACKGROUND IMAGE
+   ============================================ */
+
+.background-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/assets/images/login_background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 1;
+}
+
+.content-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+
+/* ============================================
+   AGRISCOPE LOGO
+   ============================================ */
+
+.logo-container {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.agriscope-logo {
+  width: 500px;
+  height: auto;
+  filter: drop-shadow(3px 3px 8px rgba(0, 0, 0, 0.2));
+  opacity: 0.9;
+  animation: logoFloat 4s ease-in-out infinite;
+}
+/* ============================================
+   FARMER CHARACTER
+   ============================================ */
+
+.farmer-character {
+  position: absolute;
+  bottom: -30px;
+  right: 430px;
+  z-index: 3;
+}
+
+.farmer-icon {
+  width: 350px;
+  height: 350px;
+  filter: drop-shadow(5px 5px 15px rgba(0, 0, 0, 0.3));
+  animation: farmerFloat 3s ease-in-out infinite;
+}
+
+/* ============================================
+   WOODEN ARROW SIGN WITH TEXT BUTTONS
+   ============================================ */
+
+.arrow-sign {
+  position: absolute;
+  bottom: -20px;
+  right: 220px;
+  width: 290px;
+  height: auto;
+  z-index: 3;
+}
+
+.arrow-sign-bg {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(5px 5px 15px rgba(0, 0, 0, 0.4));
+  pointer-events: none;
+}
+
+.arrow-btn {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 46%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-arrow {
+  top: 1%;
+  padding-right: 15px;
+}
+
+.register-arrow {
+  bottom: 28%;
+}
+
+.register-arrow .arrow-text {
+  margin-left: 25px;
+}
+
+.arrow-text {
+  font-family: 'Poppins', sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: #3D1F0A;
+  text-shadow:
+    1px 1px 2px rgba(255, 255, 255, 0.3),
+    0 0 5px rgba(139, 69, 19, 0.2);
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.arrow-btn:hover .arrow-text {
+  color: #2A1505;
+  text-shadow:
+    1px 1px 3px rgba(255, 255, 255, 0.5),
+    0 0 10px rgba(255, 200, 100, 0.6);
+  transform: scale(1.12);
+}
+
+.arrow-sign:hover .arrow-sign-bg {
+  filter:
+    drop-shadow(6px 10px 20px rgba(0, 0, 0, 0.5))
+    brightness(1.1);
+}
+
+.arrow-btn:active .arrow-text {
+  transform: scale(0.95);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .farmer-character {
+    bottom: 70px;
+    right: 240px;
+  }
+
+  .farmer-icon {
+    width: 170px;
+    height: 170px;
+  }
+
+  .arrow-sign {
+    bottom: -400px;
+    right: 30px;
+    width: 240px;
+  }
+
+  .arrow-text {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .farmer-character {
+    bottom: -100px;
+    right: 200px;
+  }
+
+  .farmer-icon {
+    width: 140px;
+    height: 140px;
+  }
+
+  .arrow-sign {
+    bottom: 20px;
+    right: 25px;
+    width: 200px;
+  }
+
+  .arrow-text {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .farmer-character {
+    bottom: -100px;
+    right: 150px;
+  }
+
+  .farmer-icon {
+    width: 110px;
+    height: 110px;
+  }
+
+  .arrow-sign {
+    bottom: 15px;
+    right: 15px;
+    width: 160px;
+  }
+
+  .arrow-text {
+    font-size: 18px;
+  }
+}
